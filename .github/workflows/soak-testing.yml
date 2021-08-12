@@ -1,0 +1,67 @@
+name: Soak Testing
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  publish_apps:
+    name: Publish and Soak Test App
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        app-platform: [ flask ]
+        # instrumentation-type: [ auto, manual ]
+        instrumentation-type: [ auto ]
+    env:
+      APP_PATH: integration-test-apps/${{ matrix.instrumentation-type}}-instrumentation/${{ matrix.app-platform }}
+      ECR_REGISTRY: ${{ secrets.NATHAN_AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        if: ${{ matrix.instrumentation-type }} == manual
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: ${{ env.APP_PATH }}/opentelemetry-python-core
+      - uses: actions/checkout@v2
+        if: ${{ matrix.instrumentation-type }} == manual
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          path: ${{ env.APP_PATH }}/opentelemetry-python-contrib
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          # role-duration-seconds: 1200
+          aws-region: us-west-2
+      - name: Login to ECR
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.ECR_REGISTRY }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Build docker image
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ${{ env.APP_PATH }}
+          tags: |
+            ${{ env.ECR_REGISTRY }}/aws-otel-test/python-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Run Sample App & OTel Collector + Load Generator
+        working-directory: .github/collector
+        env:
+          INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
+          LISTEN_ADDRESS: 0.0.0.0:8080
+          APP_IMAGE: ${{ env.ECR_REGISTRY }}/aws-otel-test/python-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}:${{ github.sha }}
+        run: docker-compose up --abort-on-container-exit

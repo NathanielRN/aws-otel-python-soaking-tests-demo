@@ -1,0 +1,35 @@
+version: "3.7"
+services:
+  otel:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: --config /config/collector-config.yml --log-level debug
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+    volumes:
+      - ./config:/config
+    ports:
+      - '4317:4317'
+
+  app:
+    image: ${APP_IMAGE}
+    environment:
+      - INSTANCE_ID
+      - LISTEN_ADDRESS
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=aws-otel-integ-test
+      - OTEL_EXPORTER_OTLP_ENDPOINT=grpc://otel:4317
+      - AWS_REGION=us-west-2
+    ports:
+      - '8080:8080'
+
+  generate-load:
+    build:
+      context: .
+    command: hey -z 10s http://app:8080/outgoing-http-call
+    depends_on:
+      - otel
+      - app

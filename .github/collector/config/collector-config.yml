@@ -1,0 +1,68 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu:
+      memory:
+      load:
+
+processors:
+  filter:
+    metrics:
+      include:
+        match_type: strict
+        metric_names:
+          - system.cpu.time
+          - system.memory.usage
+          - system.cpu.load_average.1m
+
+exporters:
+  logging:
+    loglevel: error
+  awsemf:
+    output_destination: stdout
+    region: us-west-2
+    namespace: OTelPythonHostMetrics
+    log_group_name: /aws/otelpythonhostmetrics/local/demo
+    log_stream_name: MyCustomStreamName
+    resource_to_telemetry_conversion:
+      enabled: true
+    dimension_rollup_option: NoDimensionRollup
+    # parse_json_encoded_attr_values: [Sources, kubernetes]
+    metric_declarations:
+      # CPU Time
+      - dimensions: [[state]]
+        metric_name_selectors:
+          - system\.cpu\.time
+      # CPU Load
+      - dimensions: []
+        metric_name_selectors:
+          - system.cpu\.load_average\.1m
+      # Memory
+      - dimensions: [[state]]
+        metric_name_selectors:
+          - system\.memory\.usage
+        label_matchers:
+          label_names:
+            - state
+          regex: free
+
+service:
+  pipelines:
+    traces:
+      receivers:
+        - otlp
+      exporters:
+        - logging
+    metrics:
+      receivers:
+        - otlp
+        - hostmetrics
+      processors:
+        - filter
+      exporters:
+        - awsemf

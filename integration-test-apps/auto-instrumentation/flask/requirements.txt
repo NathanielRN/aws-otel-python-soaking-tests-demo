@@ -1,0 +1,6 @@
+boto3
+requests
+flask
+
+opentelemetry-distro[otlp] # also installs opentelemetry-exporter-otlp
+opentelemetry-sdk-extension-aws
