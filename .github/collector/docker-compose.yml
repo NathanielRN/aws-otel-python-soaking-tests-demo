@@ -29,7 +29,7 @@ services:
   generate-load:
     build:
       context: .
-    command: hey -z 10s http://app:8080/outgoing-http-call
+    command: hey -z 1m http://app:8080/outgoing-http-call
     depends_on:
       - otel
       - app
