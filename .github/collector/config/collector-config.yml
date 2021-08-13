@@ -4,7 +4,7 @@ receivers:
       grpc:
         endpoint: 0.0.0.0:4317
   hostmetrics:
-    collection_interval: 10s
+    collection_interval: 5s
     scrapers:
       cpu:
       memory:
@@ -24,11 +24,10 @@ exporters:
   logging:
     loglevel: error
   awsemf:
-    output_destination: stdout
     region: us-west-2
     namespace: OTelPythonHostMetrics
-    log_group_name: /aws/otelpythonhostmetrics/local/demo
-    log_stream_name: MyCustomStreamName
+    log_group_name: ${LOG_GROUP_NAME}
+    log_stream_name: ${LOG_STREAM_NAME}
     resource_to_telemetry_conversion:
       enabled: true
     dimension_rollup_option: NoDimensionRollup
