@@ -2,11 +2,16 @@ name: Soak Testing
 on:
   push:
     branches: [ main ]
+env:
+  GITHUB_REGISTRY: ghcr.io
 
 jobs:
   publish_apps:
     name: Publish and Soak Test App
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: true
       matrix:
@@ -15,7 +20,6 @@ jobs:
         instrumentation-type: [ auto ]
     env:
       APP_PATH: integration-test-apps/${{ matrix.instrumentation-type}}-instrumentation/${{ matrix.app-platform }}
-      ECR_REGISTRY: ${{ secrets.NATHAN_AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com
     steps:
       - uses: actions/checkout@v2
       - uses: actions/checkout@v2
@@ -36,10 +40,12 @@ jobs:
           # role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           # role-duration-seconds: 1200
           aws-region: us-west-2
-      - name: Login to ECR
+      - name: Log in to the GitHub Container Registry
         uses: docker/login-action@v1
         with:
-          registry: ${{ env.ECR_REGISTRY }}
+          registry: ${{ env.GITHUB_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Cache Docker layers
@@ -49,13 +55,18 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-      - name: Build docker image
+      - name: Extract metadata (tags, labels) for Docker
+        id: docker-image-metadata
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.GITHUB_REGISTRY }}/${{ github.repository }}-sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-${{ github.sha }}
+      - name: Build and Push Docker image
         uses: docker/build-push-action@v2
         with:
           push: true
           context: ${{ env.APP_PATH }}
-          tags: |
-            ${{ env.ECR_REGISTRY }}/aws-otel-test/python-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}:${{ github.sha }}
+          tags: ${{ steps.docker-image-metadata.outputs.tags }}
+          labels: ${{ steps.docker-image-metadata.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Run Sample App & OTel Collector + Load Generator
@@ -63,5 +74,5 @@ jobs:
         env:
           INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
           LISTEN_ADDRESS: 0.0.0.0:8080
-          APP_IMAGE: ${{ env.ECR_REGISTRY }}/aws-otel-test/python-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}:${{ github.sha }}
+          APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
         run: docker-compose up --abort-on-container-exit
