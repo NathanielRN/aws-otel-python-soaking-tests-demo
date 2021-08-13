@@ -17,12 +17,13 @@ services:
     environment:
       - INSTANCE_ID
       - LISTEN_ADDRESS
+      - FLASK_LOG_LEVEL=ERROR
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
+      - AWS_REGION=us-west-2
       - OTEL_RESOURCE_ATTRIBUTES=service.name=aws-otel-integ-test
       - OTEL_EXPORTER_OTLP_ENDPOINT=grpc://otel:4317
-      - AWS_REGION=us-west-2
     ports:
       - '8080:8080'
 
