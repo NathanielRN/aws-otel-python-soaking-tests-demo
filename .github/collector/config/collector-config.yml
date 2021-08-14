@@ -25,7 +25,7 @@ exporters:
     loglevel: error
   awsemf:
     region: us-west-2
-    namespace: OTelPythonHostMetrics
+    namespace: ${LOGS_NAMESPACE}
     log_group_name: ${LOG_GROUP_NAME}
     log_stream_name: ${LOG_STREAM_NAME}
     resource_to_telemetry_conversion:

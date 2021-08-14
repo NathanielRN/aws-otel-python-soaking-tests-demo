@@ -81,4 +81,5 @@ jobs:
           APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
           LOG_GROUP_NAME: ${{ github.repository }}/soak-tests
           LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
+          LOGS_NAMESPACE: ${{ github.repository }}/soak-tests
         run: docker-compose up --abort-on-container-exit
