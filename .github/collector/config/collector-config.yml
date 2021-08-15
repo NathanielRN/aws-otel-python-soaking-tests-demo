@@ -4,11 +4,11 @@ receivers:
       grpc:
         endpoint: 0.0.0.0:4317
   hostmetrics:
-    collection_interval: 5s
+    collection_interval: ${HOSTMETRICS_COLLECTION_INTERVAL}
     scrapers:
       cpu:
       memory:
-      load:
+      # load:
 
 processors:
   filter:
@@ -37,10 +37,11 @@ exporters:
       - dimensions: [[state]]
         metric_name_selectors:
           - system\.cpu\.time
-      # CPU Load
-      - dimensions: []
-        metric_name_selectors:
-          - system.cpu\.load_average\.1m
+      # Cannot filter on LOAD when metric has no dimensions, See: https://github.com/open-telemetry/opentelemetry-collector/issues/3825
+      # # CPU Load
+      # - dimensions: []
+      #   metric_name_selectors:
+      #     - system.cpu\.load_average\.1m
       # Memory
       - dimensions: [[state]]
         metric_name_selectors:

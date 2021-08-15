@@ -10,6 +10,7 @@ services:
       - LOG_GROUP_NAME
       - LOGS_NAMESPACE
       - LOG_STREAM_NAME
+      - HOSTMETRICS_COLLECTION_INTERVAL
     volumes:
       - ./config:/config
     ports:
@@ -33,7 +34,7 @@ services:
   generate-load:
     build:
       context: .
-    command: hey -z 30s http://app:8080/outgoing-http-call
+    command: hey -z ${SOAK_TEST_DURATION} http://app:8080/outgoing-http-call
     depends_on:
       - otel
       - app
