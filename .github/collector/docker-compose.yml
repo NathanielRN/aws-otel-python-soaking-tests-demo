@@ -38,3 +38,46 @@ services:
     depends_on:
       - otel
       - app
+
+# version: "3.7"
+# services:
+#   otel:
+#     image: otel/opentelemetry-collector-contrib:latest
+#     command: --config /config/collector-config.yml --log-level debug
+#     environment:
+#       - AWS_ACCESS_KEY_ID
+#       - AWS_SECRET_ACCESS_KEY
+#       - AWS_SESSION_TOKEN
+#       - LOG_GROUP_NAME=test
+#       - LOGS_NAMESPACE=test
+#       - LOG_STREAM_NAME=test
+#       - HOSTMETRICS_COLLECTION_INTERVAL=5s
+#     volumes:
+#       - ./config:/config
+#       - $HOME/.aws:/.aws
+#     ports:
+#       - '4317:4317'
+
+#   app:
+#     # image: ${APP_IMAGE}
+#     image: ghcr.io/nathanielrn/aws-otel-python-soaking-tests-demo-sample-app-flask-auto-058adecda934295b3eb45e42d5bc9208b100492b:main
+#     environment:
+#       - INSTANCE_ID=test
+#       - LISTEN_ADDRESS=0.0.0.0:8080
+#       - FLASK_LOG_LEVEL=ERROR
+#       - AWS_ACCESS_KEY_ID
+#       - AWS_SECRET_ACCESS_KEY
+#       - AWS_SESSION_TOKEN
+#       - AWS_REGION=us-west-2
+#       - OTEL_RESOURCE_ATTRIBUTES=service.name=aws-otel-integ-test
+#       - OTEL_EXPORTER_OTLP_ENDPOINT=grpc://otel:4317
+#     ports:
+#       - '8080:8080'
+
+#   generate-load:
+#     build:
+#       context: .
+#     command: hey -z 30s http://app:8080/outgoing-http-call
+#     depends_on:
+#       - otel
+#       - app

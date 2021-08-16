@@ -24,6 +24,7 @@ exporters:
   logging:
     loglevel: error
   awsemf:
+    # output_destination: stdout
     region: us-west-2
     namespace: ${LOGS_NAMESPACE}
     log_group_name: ${LOG_GROUP_NAME}
