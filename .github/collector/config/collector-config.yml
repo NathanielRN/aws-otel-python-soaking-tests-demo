@@ -8,7 +8,7 @@ receivers:
     scrapers:
       cpu:
       memory:
-      # load:
+      load:
 
 processors:
   filter:
@@ -18,7 +18,7 @@ processors:
         metric_names:
           - system.cpu.time
           - system.memory.usage
-          - system.cpu.load_average.1m
+          - system.cpu.load_average.15m
 
 exporters:
   logging:
@@ -32,24 +32,27 @@ exporters:
       enabled: true
     dimension_rollup_option: NoDimensionRollup
     # parse_json_encoded_attr_values: [Sources, kubernetes]
-    metric_declarations:
-      # CPU Time
-      - dimensions: [[state]]
-        metric_name_selectors:
-          - system\.cpu\.time
-      # Cannot filter on LOAD when metric has no dimensions, See: https://github.com/open-telemetry/opentelemetry-collector/issues/3825
-      # # CPU Load
-      # - dimensions: []
-      #   metric_name_selectors:
-      #     - system.cpu\.load_average\.1m
-      # Memory
-      - dimensions: [[state]]
-        metric_name_selectors:
-          - system\.memory\.usage
-        label_matchers:
-          label_names:
-            - state
-          regex: free
+    # NOTE: We can't filter _anything_ because we will lose the LOAD metrics...
+    # Results in a lot of garbage. Can solve using issue below.
+    # metric_declarations:
+    #   # CPU Time
+    #   - dimensions: [[state]]
+    #     metric_name_selectors:
+    #       - system\.cpu\.time
+    #   # Cannot filter on LOAD when metric has no dimensions
+    #   # See: https://github.com/open-telemetry/opentelemetry-collector/issues/3825
+    #   # # CPU Load
+    #   # - dimensions: []
+    #   #   metric_name_selectors:
+    #   #     - system.cpu\.load_average\.1m
+    #   # Memory
+    #   - dimensions: [[state]]
+    #     metric_name_selectors:
+    #       - system\.memory\.usage
+    #     label_matchers:
+    #       label_names:
+    #         - state
+    #       regex: free
 
 service:
   pipelines:
