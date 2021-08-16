@@ -97,6 +97,8 @@ jobs:
           add: soak-test-snapshots
           branch: gh-pages
           message: 'Adding Soak Tests Snapshot'
+      - name: Make sure we are back on main branch
+        run: /usr/bin/git checkout main
       - name: Prepare Average Benchmark of Soak Test JSON Output
         run: |
           MEMORY_BENCHMARK=$(aws cloudwatch get-metric-statistics --namespace ${{ github.repository }}/soak-tests --metric-name system.cpu.load_average.15m --statistics Average --start-time $(date -u -d '3 hours ago' +%FT%TZ) --end-time $(date -u +%FT%TZ) --period $(expr 60 \* 60 \* 3) --region us-west-2 | jq -r '.Datapoints[] | .Value=.Average/2*100 | {Name: "Soak Test CPU Load AVG", Value, Unit: "Percent"}')
