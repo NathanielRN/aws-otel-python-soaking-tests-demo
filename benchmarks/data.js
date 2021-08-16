@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1629135238806,
+  "lastUpdate": 1629149653042,
   "repoUrl": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo",
   "entries": {
     "Soak Test Benchmarks": [
@@ -33,6 +33,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "Soak Test Memory Used AVG",
             "value": 155658240,
+            "unit": "Bytes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "distinct": true,
+          "id": "43551b9e32e08b29a3ccbfd850fec95ae98b670b",
+          "message": "Ensure back on main branch before auto pushing",
+          "timestamp": "2021-08-16T14:19:52-07:00",
+          "tree_id": "2c87036833d4ebd4d5a0adaac2510cc10f057702",
+          "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/43551b9e32e08b29a3ccbfd850fec95ae98b670b"
+        },
+        "date": 1629149652664,
+        "tool": "custombenchmark",
+        "benches": [
+          {
+            "name": "Soak Test CPU Load AVG",
+            "value": 83.11111111111111,
+            "unit": "Percent"
+          },
+          {
+            "name": "Soak Test Memory Used AVG",
+            "value": 12188330.666666666,
             "unit": "Bytes"
           }
         ]
