@@ -8,8 +8,8 @@ env:
   GITHUB_REGISTRY: ghcr.io
 
 jobs:
-  publish_apps:
-    name: Publish and Soak Test App
+  test_apps_and_publish_results:
+    name: Publish App and Soak Test and Publish Results
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -103,11 +103,11 @@ jobs:
         run: |
           MEMORY_BENCHMARK=$(aws cloudwatch get-metric-statistics --namespace ${{ github.repository }}/soak-tests --metric-name system.cpu.load_average.15m --statistics Average --start-time $(date -u -d '3 hours ago' +%FT%TZ) --end-time $(date -u +%FT%TZ) --period $(expr 60 \* 60 \* 3) --region us-west-2 | jq -r '.Datapoints[] | .Value=.Average/2*100 | {Name: "Soak Test CPU Load AVG", Value, Unit: "Percent"}')
           CPU_LOAD_BENCHMARK=$(aws cloudwatch get-metric-statistics --namespace ${{ github.repository }}/soak-tests --metric-name system.memory.usage --dimension=Name=state,Value=used --statistics Average --start-time $(date -u -d '3 hours ago' +%FT%TZ) --end-time $(date -u +%FT%TZ) --period $(expr 60 \* 60 \* 3) --region us-west-2 | jq -r '.Datapoints[] | {Name: "Soak Test Memory Used AVG", Value: .Average, Unit}')
-          jq -n "[$MEMORY_BENCHMARK] + [$CPU_LOAD_BENCHMARK] | {benchmarks: .}" > output.json
+          jq -n "[$MEMORY_BENCHMARK] + [$CPU_LOAD_BENCHMARK] | {benchmarks: .}" | tee output.json
       - name: Report on benchmark results
         uses: NathanielRN/github-action-benchmark@v1.8.2-alpha3
         with:
-          name: Soak Test Benchmarks
+          name: Soak Test Benchmarks - sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}
           tool: custombenchmark
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
