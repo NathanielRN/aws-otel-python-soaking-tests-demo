@@ -36,14 +36,6 @@ jobs:
       #   with:
       #     repository: open-telemetry/opentelemetry-python-contrib
       #     path: ${{ env.APP_PATH }}/opentelemetry-python-contrib
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          # role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
-          # role-duration-seconds: 1200
-          aws-region: us-west-2
       # # Learn more: https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#upgrading-a-workflow-that-accesses-ghcrio
       - name: Log in to the GitHub Container Registry
         uses: docker/login-action@v1
@@ -86,6 +78,14 @@ jobs:
           HOSTMETRICS_COLLECTION_INTERVAL: 3m
           SOAK_TEST_DURATION: 10m
         run: docker-compose up --abort-on-container-exit
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          # role-duration-seconds: 1200
+          aws-region: us-west-2
       - name: Get a Snapshot of the CPU Time Soak Test results
         run: aws cloudwatch get-metric-widget-image --metric-widget "{\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.cpu.time\",\"state\",\"idle\"],[\"...\",\"system\"],[\"...\",\"user\"],[\"...\",\"interrupt\"],[\"...\",\"wait\"]],\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"CPU Time Spent In Several CPU Tasks\",\"width\":2043,\"height\":336,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d > soak-test-snapshots/cpu-time/soak-tests-${{ github.sha }}.png
       - name: Get a Snapshot of the CPU Load % for 2 Cores Soak Test results
