@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1629256175662,
+  "lastUpdate": 1629257145737,
   "repoUrl": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo",
   "entries": {
     "Soak Test Benchmarks": [
@@ -120,6 +120,37 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/cab27ebb56b12595ca51022b12a2f48e4dff2eff"
         },
         "date": 1629256175290,
+        "tool": "custombenchmark",
+        "benches": [
+          {
+            "name": "Soak Test CPU Load AVG",
+            "value": 81.66666666666667,
+            "unit": "Percent"
+          }
+        ]
+      }
+    ],
+    "Soak Test Benchmarks - sample-app-flask-auto": [
+      {
+        "commit": {
+          "author": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "distinct": true,
+          "id": "9f6661fd0fc8a4ad4ddc25cbeae4fa52c663f971",
+          "message": "Separate gh-pages graph tests by matrix entry",
+          "timestamp": "2021-08-17T20:13:27-07:00",
+          "tree_id": "07783436328e71902bf4b213c3fce085c645a21b",
+          "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/9f6661fd0fc8a4ad4ddc25cbeae4fa52c663f971"
+        },
+        "date": 1629257145416,
         "tool": "custombenchmark",
         "benches": [
           {
