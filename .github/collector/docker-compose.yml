@@ -20,7 +20,7 @@ services:
         target: /proc
     ports:
       - '4317:4317'
-    user: "0:0"
+    user: "${UID}:${GID}"
 
   app:
     image: ${APP_IMAGE}

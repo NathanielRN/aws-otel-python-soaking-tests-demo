@@ -20,11 +20,10 @@ processors:
       include:
         match_type: regexp
         metric_names:
-          - .*
-          # - process.cpu.time
-          # - process.memory.physical_usage
-          # - process.memory.virtual_usage
-          # - process.disk.io
+          - process.cpu.time
+          - process.memory.physical_usage
+          - process.memory.virtual_usage
+          - process.disk.io
         resource_attributes:
           - Key: process.command_line
             # Value: ${PROCESS_COMMAND_LINE}
@@ -36,7 +35,7 @@ exporters:
   logging/error:
     loglevel: error
   awsemf:
-    output_destination: stdout
+    # output_destination: stdout
     region: us-west-2
     namespace: ${LOGS_NAMESPACE}
     log_group_name: ${LOG_GROUP_NAME}
@@ -45,17 +44,24 @@ exporters:
       enabled: true
     dimension_rollup_option: NoDimensionRollup
     # parse_json_encoded_attr_values: [Sources, kubernetes]
-    # metric_declarations:
-    #   - dimensions: [[process.command_line, state]]
-    #     metric_name_selectors:
-    #       - process.cpu.time
-    #   - dimensions: [[process.command_line, direction]]
-    #     metric_name_selectors:
-    #       - process.disk.io
-    #   - dimensions: [[process.command_line, direction]]
-    #     metric_name_selectors:
-    #       - process.memory.physical_usage
-    #       - process.memory.virtual_usage
+    metric_declarations:
+      - dimensions: [[process.command_line]]
+        metric_name_selectors:
+          - process.memory.virtual_usage
+          - process.disk.io
+          - process.cpu.time
+          - process.memory.physical_usage
+      # # Only able to see these more detailed dimensions on my CloudDesktop?
+      # - dimensions: [[process.command_line, state]]
+      #   metric_name_selectors:
+      #     - process.cpu.time
+      # - dimensions: [[process.command_line, direction]]
+      #   metric_name_selectors:
+      #     - process.disk.io
+      # - dimensions: [[process.command_line, direction]]
+      #   metric_name_selectors:
+      #     - process.memory.physical_usage
+      #     - process.memory.virtual_usage
 
 service:
   pipelines:
