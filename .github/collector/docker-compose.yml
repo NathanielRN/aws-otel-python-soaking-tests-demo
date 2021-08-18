@@ -7,10 +7,12 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
+      - HOSTMETRICS_COLLECTION_INTERVAL
       - LOG_GROUP_NAME
       - LOGS_NAMESPACE
       - LOG_STREAM_NAME
-      - HOSTMETRICS_COLLECTION_INTERVAL
+      - PROCESS_COMMAND_LINE_OP
+      - PROCESS_EXECUTABLE_NAME
     volumes:
       - ./config:/config
       - type: bind
@@ -18,7 +20,6 @@ services:
         target: /proc
     ports:
       - '4317:4317'
-    # privileged: true
     user: "${UID}:${GID}"
 
   app:

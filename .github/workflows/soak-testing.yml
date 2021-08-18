@@ -83,15 +83,17 @@ jobs:
           LOG_GROUP_NAME: ${{ github.repository }}/soak-tests
           LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
           LOGS_NAMESPACE: ${{ github.repository }}/soak-tests
-          HOSTMETRICS_COLLECTION_INTERVAL: 3m
-          SOAK_TEST_DURATION: 10m
+          HOSTMETRICS_COLLECTION_INTERVAL: 10s
+          SOAK_TEST_DURATION: 1m
+          PROCESS_COMMAND_LINE: /usr/local/bin/python3 application.py
+          PROCESS_EXECUTABLE_NAME: python3
         run: docker-compose up --abort-on-container-exit
       - name: Get a Snapshot of the CPU Time Soak Test results
-        run: aws cloudwatch get-metric-widget-image --metric-widget "{\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.cpu.time\",\"state\",\"idle\"],[\"...\",\"system\"],[\"...\",\"user\"],[\"...\",\"interrupt\"],[\"...\",\"wait\"]],\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"CPU Time Spent In Several CPU Tasks\",\"width\":2043,\"height\":336,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d > soak-test-snapshots/cpu-time/soak-tests-${{ env.IMAGE_SUFFIX }}.png
+        run: aws cloudwatch get-metric-widget-image --metric-widget "{\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.cpu.time\",\"state\",\"idle\"],[\"...\",\"system\"],[\"...\",\"user\"],[\"...\",\"interrupt\"],[\"...\",\"wait\"]],\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"CPU Time Spent In Several CPU Tasks\",\"width\":2043,\"height\":336,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d | tee soak-test-snapshots/cpu-time/soak-tests-${{ env.IMAGE_SUFFIX }}.png
       - name: Get a Snapshot of the CPU Load % for 2 Cores Soak Test results
-        run: aws cloudwatch get-metric-widget-image --metric-widget "{\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.cpu.load_average.15m\",{\"id\":\"m10\",\"visible\":false}],[{\"expression\":\"m10/2\",\"label\":\"Expression1\",\"id\":\"e1\"}]],\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"CPU Load As a Percentage of 2 Cores\",\"width\":2043,\"height\":250,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d > soak-test-snapshots/cpu-load/soak-tests-${{ env.IMAGE_SUFFIX }}.png
+        run: aws cloudwatch get-metric-widget-image --metric-widget "{\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.cpu.load_average.15m\",{\"id\":\"m10\",\"visible\":false}],[{\"expression\":\"m10/2\",\"label\":\"Expression1\",\"id\":\"e1\"}]],\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"CPU Load As a Percentage of 2 Cores\",\"width\":2043,\"height\":250,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d | tee soak-test-snapshots/cpu-load/soak-tests-${{ env.IMAGE_SUFFIX }}.png
       - name: Get a Snapshot of the Free Memory Soak Test results
-        run: aws cloudwatch get-metric-widget-image --metric-widget "{\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"Free Memory\",\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.memory.usage\",\"state\",\"free\"]],\"width\":2043,\"height\":250,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d > soak-test-snapshots/free-memory/soak-tests-${{ env.IMAGE_SUFFIX }}.png
+        run: aws cloudwatch get-metric-widget-image --metric-widget "{\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"Free Memory\",\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.memory.usage\",\"state\",\"free\"]],\"width\":2043,\"height\":250,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d | tee soak-test-snapshots/free-memory/soak-tests-${{ env.IMAGE_SUFFIX }}.png
       - uses: EndBug/add-and-commit@v7
         with:
           add: soak-test-snapshots
