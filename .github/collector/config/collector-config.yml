@@ -10,18 +10,20 @@ receivers:
         include:
           # names:
             # - ${PROCESS_EXECUTABLE_NAME}
-          names: [ python3 ]
+          names:
+            - python3
           match_type: strict
 
 processors:
   filter:
     metrics:
       include:
-        match_type: strict
+        match_type: regexp
         metric_names:
-          - process.cpu.time
-          - process.memory.physical_usage
-          - process.memory.virtual_usage
+          - .*
+          # - process.cpu.time
+          # - process.memory.physical_usage
+          # - process.memory.virtual_usage
           # - process.disk.io
         resource_attributes:
           - Key: process.command_line
@@ -29,10 +31,10 @@ processors:
             Value: /usr/local/bin/python3 application.py
 
 exporters:
-  logging/error:
-    loglevel: error
   logging/debug:
     loglevel: debug
+  logging/error:
+    loglevel: error
   awsemf:
     output_destination: stdout
     region: us-west-2
@@ -69,5 +71,5 @@ service:
       processors:
         - filter
       exporters:
-        # - logging/debug
         - awsemf
+        # - logging/debug
