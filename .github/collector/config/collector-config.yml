@@ -21,10 +21,9 @@ processors:
           - process.memory.physical_usage
           - process.memory.virtual_usage
           # - process.disk.io
-        # TODO: Adds this once we know the correct resource attribute.
-        # resource_attributes:
-        #   - Key: process.command_line
-        #     Value: /usr/local/bin/python3 application.py
+        resource_attributes:
+          - Key: process.command_line
+            Value: /usr/local/bin/python3 application.py
 
 exporters:
   logging/error:
