@@ -11,7 +11,7 @@ services:
       - LOG_GROUP_NAME
       - LOGS_NAMESPACE
       - LOG_STREAM_NAME
-      - PROCESS_COMMAND_LINE_OP
+      - PROCESS_COMMAND_LINE
       - PROCESS_EXECUTABLE_NAME
     volumes:
       - ./config:/config

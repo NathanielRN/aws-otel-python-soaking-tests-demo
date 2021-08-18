@@ -8,10 +8,8 @@ receivers:
     scrapers:
       process:
         include:
-          # names:
-            # - ${PROCESS_EXECUTABLE_NAME}
           names:
-            - python3
+            - ${PROCESS_EXECUTABLE_NAME}
           match_type: strict
 
 processors:
@@ -26,8 +24,7 @@ processors:
           - process.disk.io
         resource_attributes:
           - Key: process.command_line
-            # Value: ${PROCESS_COMMAND_LINE}
-            Value: /usr/local/bin/python3 application.py
+            Value: ${PROCESS_COMMAND_LINE}
 
 exporters:
   logging/debug:
@@ -43,9 +40,7 @@ exporters:
     resource_to_telemetry_conversion:
       enabled: true
     dimension_rollup_option: NoDimensionRollup
-    # parse_json_encoded_attr_values: [Sources, kubernetes]
     metric_declarations:
-      # # FIXME: Dimensions with '.'s don't work!
       - dimensions: [[process.command_line]]
         metric_name_selectors:
           - process.memory.virtual_usage
