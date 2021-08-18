@@ -84,7 +84,7 @@ jobs:
           LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
           LOGS_NAMESPACE: ${{ github.repository }}/soak-tests
           HOSTMETRICS_COLLECTION_INTERVAL: 10s
-          SOAK_TEST_DURATION: 1m
+          SOAK_TEST_DURATION: 10m
           PROCESS_COMMAND_LINE: /usr/local/bin/python3 application.py
           PROCESS_EXECUTABLE_NAME: python3
         run: docker-compose up --abort-on-container-exit

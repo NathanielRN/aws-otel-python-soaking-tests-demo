@@ -32,7 +32,7 @@ exporters:
   logging/error:
     loglevel: error
   awsemf:
-    output_destination: stdout
+    # output_destination: stdout
     region: us-west-2
     namespace: ${LOGS_NAMESPACE}
     log_group_name: ${LOG_GROUP_NAME}
@@ -47,7 +47,7 @@ exporters:
           - process.disk.io
           - process.cpu.time
           - process.memory.physical_usage
-      # # Only able to see these more detailed dimensions on my CloudDesktop?
+      # # Root access on CloudDesktop lets me see these more detailed metrics but not on GitHub?
       # - dimensions: [[process.command_line, state]]
       #   metric_name_selectors:
       #     - process.cpu.time
