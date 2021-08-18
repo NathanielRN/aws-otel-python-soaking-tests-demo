@@ -6,9 +6,10 @@ receivers:
   hostmetrics:
     collection_interval: ${HOSTMETRICS_COLLECTION_INTERVAL}
     scrapers:
-      cpu:
-      memory:
-      load:
+      process:
+        include:
+          names: [ python3 ]
+          match_type: strict
 
 processors:
   filter:
@@ -16,13 +17,21 @@ processors:
       include:
         match_type: strict
         metric_names:
-          - system.cpu.time
-          - system.memory.usage
-          - system.cpu.load_average.15m
+          - process.cpu.time
+          - process.memory.physical_usage
+          - process.memory.virtual_usage
+          # - process.disk.io
+        # TODO: Adds this once we know the correct resource attribute.
+        # resource_attributes:
+        #   - Key: process.command_line
+        #     Value: /usr/local/bin/python3 application.py
 
 exporters:
-  logging:
+  logging/error:
     loglevel: error
+  # DEBUG LOGGER
+  logging/debug:
+    loglevel: debug
   awsemf:
     # output_destination: stdout
     region: us-west-2
@@ -61,7 +70,7 @@ service:
       receivers:
         - otlp
       exporters:
-        - logging
+        - logging/error
     metrics:
       receivers:
         - otlp
@@ -69,4 +78,5 @@ service:
       processors:
         - filter
       exporters:
+        - logging/debug
         - awsemf

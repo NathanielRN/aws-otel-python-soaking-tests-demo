@@ -13,8 +13,15 @@ services:
       - HOSTMETRICS_COLLECTION_INTERVAL
     volumes:
       - ./config:/config
+      - type: bind
+        source: /proc
+        target: /proc
     ports:
       - '4317:4317'
+    privileged: true
+    # Trying to avoid this which works. Maybe since we don't do `sudo docker-compose up` it will work?
+    # user: "0:${GID}"
+    user: "${UID}:${GID}"
 
   app:
     image: ${APP_IMAGE}
