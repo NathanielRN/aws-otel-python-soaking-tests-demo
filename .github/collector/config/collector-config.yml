@@ -45,7 +45,7 @@ exporters:
     dimension_rollup_option: NoDimensionRollup
     # parse_json_encoded_attr_values: [Sources, kubernetes]
     metric_declarations:
-      - dimensions: [[process.command_line]]
+      - dimensions: [[process\.command_line]]
         metric_name_selectors:
           - process.memory.virtual_usage
           - process.disk.io
