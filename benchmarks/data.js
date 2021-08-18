@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1629254620857,
+  "lastUpdate": 1629256175662,
   "repoUrl": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo",
   "entries": {
     "Soak Test Benchmarks": [
@@ -91,6 +91,35 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/b89016a624e1c3f34f60b787386e1e403731f644"
         },
         "date": 1629254620543,
+        "tool": "custombenchmark",
+        "benches": [
+          {
+            "name": "Soak Test CPU Load AVG",
+            "value": 81.66666666666667,
+            "unit": "Percent"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "distinct": true,
+          "id": "cab27ebb56b12595ca51022b12a2f48e4dff2eff",
+          "message": "Only configure AWS credentials last minute when we need them",
+          "timestamp": "2021-08-17T19:57:14-07:00",
+          "tree_id": "3c886868baf4f9df0cf7b7b16d1a1ca8e5512020",
+          "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/cab27ebb56b12595ca51022b12a2f48e4dff2eff"
+        },
+        "date": 1629256175290,
         "tool": "custombenchmark",
         "benches": [
           {
