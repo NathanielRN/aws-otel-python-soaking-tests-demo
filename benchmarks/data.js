@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1629257145737,
+  "lastUpdate": 1629264685530,
   "repoUrl": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo",
   "entries": {
     "Soak Test Benchmarks": [
@@ -151,6 +151,35 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/9f6661fd0fc8a4ad4ddc25cbeae4fa52c663f971"
         },
         "date": 1629257145416,
+        "tool": "custombenchmark",
+        "benches": [
+          {
+            "name": "Soak Test CPU Load AVG",
+            "value": 81.66666666666667,
+            "unit": "Percent"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "distinct": true,
+          "id": "e59b71a6b15f3e28208ea85a12a7937610198a04",
+          "message": "Add matrix to published png images",
+          "timestamp": "2021-08-17T22:18:51-07:00",
+          "tree_id": "b30e5f993cfd5c17c2f4eb4faff35ce6491b9a6f",
+          "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/e59b71a6b15f3e28208ea85a12a7937610198a04"
+        },
+        "date": 1629264685173,
         "tool": "custombenchmark",
         "benches": [
           {
