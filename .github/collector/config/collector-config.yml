@@ -10,8 +10,6 @@ receivers:
       memory:
       load:
 
-# DEBUG COMMENT
-
 processors:
   filter:
     metrics:
