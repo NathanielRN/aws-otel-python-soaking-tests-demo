@@ -18,9 +18,8 @@ services:
         target: /proc
     ports:
       - '4317:4317'
-    # TODO: Check can we do without these?
-    privileged: true
-    # user: "${UID}:${GID}"
+    # privileged: true
+    user: "${UID}:${GID}"
 
   app:
     image: ${APP_IMAGE}

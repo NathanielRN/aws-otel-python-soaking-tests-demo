@@ -83,7 +83,7 @@ jobs:
           LOG_GROUP_NAME: ${{ github.repository }}/soak-tests
           LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
           LOGS_NAMESPACE: ${{ github.repository }}/soak-tests
-          HOSTMETRICS_COLLECTION_INTERVAL: 30s
+          HOSTMETRICS_COLLECTION_INTERVAL: 3m
           SOAK_TEST_DURATION: 10m
         run: docker-compose up --abort-on-container-exit
       - name: Get a Snapshot of the CPU Time Soak Test results
