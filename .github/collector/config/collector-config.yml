@@ -35,7 +35,7 @@ exporters:
   logging/error:
     loglevel: error
   awsemf:
-    # output_destination: stdout
+    output_destination: stdout
     region: us-west-2
     namespace: ${LOGS_NAMESPACE}
     log_group_name: ${LOG_GROUP_NAME}
@@ -45,7 +45,8 @@ exporters:
     dimension_rollup_option: NoDimensionRollup
     # parse_json_encoded_attr_values: [Sources, kubernetes]
     metric_declarations:
-      - dimensions: [[process\.command_line]]
+      # # FIXME: Dimensions with '.'s don't work!
+      - dimensions: [[process.command_line]]
         metric_name_selectors:
           - process.memory.virtual_usage
           - process.disk.io
