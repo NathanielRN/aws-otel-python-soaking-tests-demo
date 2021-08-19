@@ -4,7 +4,7 @@ receivers:
       grpc:
         endpoint: 0.0.0.0:4317
   hostmetrics:
-    collection_interval: ${HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS}s
+    collection_interval: ${HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS}
     scrapers:
       process:
         include:

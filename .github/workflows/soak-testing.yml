@@ -10,7 +10,7 @@ env:
   PROCESS_EXECUTABLE_NAME: python3
   # Global Env Vars
   AWS_REGION: us-west-2
-  HOURS_TO_RUN: 1
+  HOURS_TO_RUN: 5
   HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
 
 jobs:
@@ -31,68 +31,67 @@ jobs:
       IMAGE_SUFFIX: sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-${{ github.sha }}
     steps:
       - uses: actions/checkout@v2
-      # Only for manual app
-      # - uses: actions/checkout@v2
-      #   if: ${{ matrix.instrumentation-type }} == manual
-      #   with:
-      #     repository: open-telemetry/opentelemetry-python
-      #     path: ${{ env.APP_PATH }}/opentelemetry-python-core
-      # - uses: actions/checkout@v2
-      #   if: ${{ matrix.instrumentation-type }} == manual
-      #   with:
-      #     repository: open-telemetry/opentelemetry-python-contrib
-      #     path: ${{ env.APP_PATH }}/opentelemetry-python-contrib
-      # - name: Log in to the GitHub Container Registry
-      #   uses: docker/login-action@v1
-      #   with:
-      #     registry: ghcr.io
-      #     username: ${{ github.actor }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v1
-      # - name: Cache Docker layers
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: /tmp/.buildx-cache
-      #     key: ${{ runner.os }}-buildx-${{ github.sha }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-buildx-
-      # - name: Extract metadata (tags, labels) for Docker
-      #   id: docker-image-metadata
-      #   uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-      #   with:
-      #     images: ghcr.io/${{ github.repository }}-${{ env.IMAGE_SUFFIX }}
-      # - name: Build and Push Docker image
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     push: true
-      #     context: ${{ env.APP_PATH }}
-      #     tags: ${{ steps.docker-image-metadata.outputs.tags }}
-      #     labels: ${{ steps.docker-image-metadata.outputs.labels }}
-      #     cache-from: type=local,src=/tmp/.buildx-cache
-      #     cache-to: type=local,dest=/tmp/.buildx-cache
+      - uses: actions/checkout@v2
+        if: ${{ matrix.instrumentation-type }} == manual
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: ${{ env.APP_PATH }}/opentelemetry-python-core
+      - uses: actions/checkout@v2
+        if: ${{ matrix.instrumentation-type }} == manual
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          path: ${{ env.APP_PATH }}/opentelemetry-python-contrib
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Extract metadata (tags, labels) for Docker
+        id: docker-image-metadata
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ghcr.io/${{ github.repository }}-${{ env.IMAGE_SUFFIX }}
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ${{ env.APP_PATH }}
+          tags: ${{ steps.docker-image-metadata.outputs.tags }}
+          labels: ${{ steps.docker-image-metadata.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      # - name: Run Sample App & OTel Collector + Load Generator
-      #   working-directory: .github/collector
-      #   env:
-      #     APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
-      #     INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
-      #     LISTEN_ADDRESS: 0.0.0.0:8080
-      #     LOG_GROUP_NAME: ${{ github.repository }}/soak-tests
-      #     LOGS_NAMESPACE: ${{ github.repository }}/soak-tests
-      #     LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
-      #     PROCESS_COMMAND_LINE: ${{ env.PROCESS_COMMAND_LINE }}
-      #     PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
-      #     HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}s
-      #     SOAK_TEST_DURATION: ${{ env.HOURS_TO_RUN }}h
-      #   run: docker-compose up --abort-on-container-exit
+      - name: Run Sample App & OTel Collector + Load Generator
+        working-directory: .github/collector
+        env:
+          APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
+          INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
+          LISTEN_ADDRESS: 0.0.0.0:8080
+          LOG_GROUP_NAME: ${{ github.repository }}/soak-tests
+          LOGS_NAMESPACE: ${{ github.repository }}/soak-tests
+          LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
+          PROCESS_COMMAND_LINE: ${{ env.PROCESS_COMMAND_LINE }}
+          PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
+          HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}s
+          SOAK_TEST_DURATION: ${{ env.HOURS_TO_RUN }}h
+        run: docker-compose up --abort-on-container-exit
       # Not possible...
-          # run: docker-compose up -d --abort-on-container-exit
+        # run: docker-compose up -d --abort-on-container-exit
       # - name: Poll alarms during Soak Test
       #   continue-on-error: true
       #   run: >-
