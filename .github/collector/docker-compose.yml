@@ -20,9 +20,6 @@ services:
         target: /proc
     ports:
       - '4317:4317'
-    # # This on Cloud Desktop lets you see more detailed metrics, but not on GitHub...
-    # privileged: true
-    # user: "0:${GID}"
     user: "${UID}:${GID}"
 
   app:
@@ -48,15 +45,14 @@ services:
       - otel
       - app
 
+# # To run on Cloud Desktop:
+# #
 # version: "3.7"
 # services:
 #   otel:
 #     image: otel/opentelemetry-collector-contrib:latest
 #     command: --config /config/collector-config.yml --log-level debug
 #     environment:
-#       - AWS_ACCESS_KEY_ID
-#       - AWS_SECRET_ACCESS_KEY
-#       - AWS_SESSION_TOKEN
 #       - LOG_GROUP_NAME=test
 #       - LOGS_NAMESPACE=test
 #       - LOG_STREAM_NAME=test
@@ -66,6 +62,10 @@ services:
 #       - $HOME/.aws:/.aws
 #     ports:
 #       - '4317:4317'
+#     # This on Cloud Desktop lets you see more detailed metrics, but not on GitHub...
+#     privileged: true
+#     user: "0:${GID}"
+#     # user: "${UID}:${GID}"
 
 #   app:
 #     # image: ${APP_IMAGE}
@@ -74,12 +74,11 @@ services:
 #       - INSTANCE_ID=test
 #       - LISTEN_ADDRESS=0.0.0.0:8080
 #       - FLASK_LOG_LEVEL=ERROR
-#       - AWS_ACCESS_KEY_ID
-#       - AWS_SECRET_ACCESS_KEY
-#       - AWS_SESSION_TOKEN
 #       - AWS_REGION=us-west-2
 #       - OTEL_RESOURCE_ATTRIBUTES=service.name=aws-otel-integ-test
 #       - OTEL_EXPORTER_OTLP_ENDPOINT=grpc://otel:4317
+#     volumes:
+#       - $HOME/.aws:/.aws
 #     ports:
 #       - '8080:8080'
 

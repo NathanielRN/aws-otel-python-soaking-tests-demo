@@ -1,0 +1,40 @@
+{
+    "metrics": [
+        [
+            "<LOGS_NAMESPACE>",
+            "process.memory.virtual_usage",
+            "process.command_line",
+            "<DIMENSION_1_VALUE>",
+            {
+                "id": "m2",
+                "label": "Virtual Memory"
+            }
+        ],
+        [
+            ".",
+            "process.memory.physical_usage",
+            ".",
+            ".",
+            {
+                "id": "m1",
+                "label": "Physical Memory"
+            }
+        ]
+    ],
+    "view": "timeSeries",
+    "stacked": false,
+    "stat": "Maximum",
+    "period": 60,
+    "title": "Process Memory Usage",
+    "yAxis": {
+        "left": {
+            "label": "",
+            "showUnits": true
+        }
+    },
+    "liveData": false,
+    "width": 2043,
+    "height": 250,
+    "start": "-PT<HOURS_TO_RUN>H",
+    "end": "P0D"
+}

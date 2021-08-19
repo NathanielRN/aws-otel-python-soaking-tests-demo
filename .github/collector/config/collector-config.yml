@@ -8,20 +8,20 @@ receivers:
     scrapers:
       process:
         include:
+          match_type: strict
           names:
             - ${PROCESS_EXECUTABLE_NAME}
-          match_type: strict
 
 processors:
   filter:
     metrics:
       include:
-        match_type: regexp
+        match_type: strict
         metric_names:
           - process.cpu.time
+          # - process.disk.io
           - process.memory.physical_usage
           - process.memory.virtual_usage
-          - process.disk.io
         resource_attributes:
           - Key: process.command_line
             Value: ${PROCESS_COMMAND_LINE}
@@ -43,10 +43,10 @@ exporters:
     metric_declarations:
       - dimensions: [[process.command_line]]
         metric_name_selectors:
-          - process.memory.virtual_usage
-          - process.disk.io
           - process.cpu.time
+          # - process.disk.io
           - process.memory.physical_usage
+          - process.memory.virtual_usage
       # # Root access on CloudDesktop lets me see these more detailed metrics but not on GitHub?
       # - dimensions: [[process.command_line, state]]
       #   metric_name_selectors:

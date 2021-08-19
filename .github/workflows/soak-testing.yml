@@ -5,7 +5,11 @@ on:
   push:
     branches: [ main ]
 env:
-  GITHUB_REGISTRY: ghcr.io
+  # Language Specific
+  PROCESS_COMMAND_LINE: /usr/local/bin/python3 application.py
+  PROCESS_EXECUTABLE_NAME: python3
+  # Global Env Vars
+  AWS_REGION: us-west-2
 
 jobs:
   test_apps_and_publish_results:
@@ -22,10 +26,12 @@ jobs:
         instrumentation-type: [ auto ]
     env:
       APP_PATH: integration-test-apps/${{ matrix.instrumentation-type}}-instrumentation/${{ matrix.app-platform }}
+      HOURS_TO_RUN: 5
+      ASSUMED_NUM_OF_CPUS: 2
       IMAGE_SUFFIX: sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-${{ github.sha }}
     steps:
       - uses: actions/checkout@v2
-      # Only for manual app
+      # # Only for manual app
       # - uses: actions/checkout@v2
       #   if: ${{ matrix.instrumentation-type }} == manual
       #   with:
@@ -36,88 +42,114 @@ jobs:
       #   with:
       #     repository: open-telemetry/opentelemetry-python-contrib
       #     path: ${{ env.APP_PATH }}/opentelemetry-python-contrib
-      # # Learn more: https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#upgrading-a-workflow-that-accesses-ghcrio
-      - name: Log in to the GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.GITHUB_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-      - name: Extract metadata (tags, labels) for Docker
-        id: docker-image-metadata
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ env.GITHUB_REGISTRY }}/${{ github.repository }}-${{ env.IMAGE_SUFFIX }}
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          context: ${{ env.APP_PATH }}
-          tags: ${{ steps.docker-image-metadata.outputs.tags }}
-          labels: ${{ steps.docker-image-metadata.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+      # - name: Log in to the GitHub Container Registry
+      #   uses: docker/login-action@v1
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v1
+      # - name: Cache Docker layers
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: /tmp/.buildx-cache
+      #     key: ${{ runner.os }}-buildx-${{ github.sha }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-buildx-
+      # - name: Extract metadata (tags, labels) for Docker
+      #   id: docker-image-metadata
+      #   uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      #   with:
+      #     images: ghcr.io/${{ github.repository }}-${{ env.IMAGE_SUFFIX }}
+      # - name: Build and Push Docker image
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     push: true
+      #     context: ${{ env.APP_PATH }}
+      #     tags: ${{ steps.docker-image-metadata.outputs.tags }}
+      #     labels: ${{ steps.docker-image-metadata.outputs.labels }}
+      #     cache-from: type=local,src=/tmp/.buildx-cache
+      #     cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          # role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
-          # role-duration-seconds: 1200
-          aws-region: us-west-2
-      - name: Run Sample App & OTel Collector + Load Generator
-        working-directory: .github/collector
-        env:
-          INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
-          LISTEN_ADDRESS: 0.0.0.0:8080
-          APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
-          LOG_GROUP_NAME: ${{ github.repository }}/soak-tests
-          LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
-          LOGS_NAMESPACE: ${{ github.repository }}/soak-tests
-          HOSTMETRICS_COLLECTION_INTERVAL: 10s
-          SOAK_TEST_DURATION: 10m
-          PROCESS_COMMAND_LINE: /usr/local/bin/python3 application.py
-          PROCESS_EXECUTABLE_NAME: python3
-        run: docker-compose up --abort-on-container-exit
-      - name: Get a Snapshot of the CPU Time Soak Test results
-        run: aws cloudwatch get-metric-widget-image --metric-widget "{\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.cpu.time\",\"state\",\"idle\"],[\"...\",\"system\"],[\"...\",\"user\"],[\"...\",\"interrupt\"],[\"...\",\"wait\"]],\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"CPU Time Spent In Several CPU Tasks\",\"width\":2043,\"height\":336,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d | tee soak-test-snapshots/cpu-time/soak-tests-${{ env.IMAGE_SUFFIX }}.png
-      - name: Get a Snapshot of the CPU Load % for 2 Cores Soak Test results
-        run: aws cloudwatch get-metric-widget-image --metric-widget "{\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.cpu.load_average.15m\",{\"id\":\"m10\",\"visible\":false}],[{\"expression\":\"m10/2\",\"label\":\"Expression1\",\"id\":\"e1\"}]],\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"CPU Load As a Percentage of 2 Cores\",\"width\":2043,\"height\":250,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d | tee soak-test-snapshots/cpu-load/soak-tests-${{ env.IMAGE_SUFFIX }}.png
-      - name: Get a Snapshot of the Free Memory Soak Test results
-        run: aws cloudwatch get-metric-widget-image --metric-widget "{\"view\":\"timeSeries\",\"stacked\":false,\"stat\":\"Average\",\"period\":30,\"title\":\"Free Memory\",\"metrics\":[[\"${{ github.repository }}/soak-tests\",\"system.memory.usage\",\"state\",\"free\"]],\"width\":2043,\"height\":250,\"start\":\"-PT3H\",\"end\":\"P0D\"}" | jq -r '.MetricWidgetImage' | base64 -d | tee soak-test-snapshots/free-memory/soak-tests-${{ env.IMAGE_SUFFIX }}.png
-      - uses: EndBug/add-and-commit@v7
-        with:
-          add: soak-test-snapshots
-          branch: gh-pages
-          message: 'Adding Soak Tests Snapshot'
-      - name: Make sure we are back on main branch
-        run: /usr/bin/git checkout main
-      - name: Prepare Average Benchmark of Soak Test JSON Output
-        run: |
-          MEMORY_BENCHMARK=$(aws cloudwatch get-metric-statistics --namespace ${{ github.repository }}/soak-tests --metric-name system.cpu.load_average.15m --statistics Average --start-time $(date -u -d '3 hours ago' +%FT%TZ) --end-time $(date -u +%FT%TZ) --period $(expr 60 \* 60 \* 3) --region us-west-2 | jq -r '.Datapoints[] | .Value=.Average/2*100 | {Name: "Soak Test CPU Load AVG", Value, Unit: "Percent"}')
-          CPU_LOAD_BENCHMARK=$(aws cloudwatch get-metric-statistics --namespace ${{ github.repository }}/soak-tests --metric-name system.memory.usage --dimension=Name=state,Value=used --statistics Average --start-time $(date -u -d '3 hours ago' +%FT%TZ) --end-time $(date -u +%FT%TZ) --period $(expr 60 \* 60 \* 3) --region us-west-2 | jq -r '.Datapoints[] | {Name: "Soak Test Memory Used AVG", Value: .Average, Unit}')
-          jq -n "[$MEMORY_BENCHMARK] + [$CPU_LOAD_BENCHMARK] | {benchmarks: .}" | tee output.json
-      - name: Report on benchmark results
+          aws-region: ${{ env.AWS_REGION }}
+      # - name: Run Sample App & OTel Collector + Load Generator
+      #   working-directory: .github/collector
+      #   env:
+      #     APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
+      #     INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
+      #     LISTEN_ADDRESS: 0.0.0.0:8080
+      #     LOG_GROUP_NAME: ${{ github.repository }}/soak-tests
+      #     LOGS_NAMESPACE: ${{ github.repository }}/soak-tests
+      #     LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
+      #     PROCESS_COMMAND_LINE: ${{ env.PROCESS_COMMAND_LINE }}
+      #     PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
+      #     HOSTMETRICS_COLLECTION_INTERVAL: 10m
+      #     SOAK_TEST_DURATION: ${{ env.HOURS_TO_RUN }}h
+      #   run: docker-compose up --abort-on-container-exit
+      # - name: Get a snapshot of metrics
+      #   run: >-
+      #     mkdir -p soak-tests/snapshots/${{ github.sha }};
+      #     for metric_kind in cpu-load memory-usage;
+      #     do
+      #       aws cloudwatch get-metric-widget-image --metric-widget "$(
+      #         cat ./.github/aws-cloudwatch-api-values/get-metric-widget-statistics/$metric_kind-metric-widget.json |
+      #         sed -e "s/<HOURS_TO_RUN>/${{ env.HOURS_TO_RUN }}/g" \
+      #             -e "s/<ASSUMED_NUM_OF_CPUS>/${{ env.ASSUMED_NUM_OF_CPUS }}/g" \
+      #             -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
+      #             -e "s/<DIMENSION_1_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
+      #       )" |
+      #       jq -r '.MetricWidgetImage' |
+      #       base64 -d > soak-tests/snapshots/${{ github.sha }}/${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-$metric_kind-results.png;
+      #     done
+      # - name: Commmit snapshots to repository
+      #   uses: EndBug/add-and-commit@v7
+      #   with:
+      #     add: soak-tests/snapshots
+      #     branch: gh-pages
+      #     message: 'Adding Soak Tests Snapshots'
+      - name: Prepare Soak Test results as JSON output
+        run: >-
+          HOURS_TO_RUN_IN_SECONDS=$(expr 60 \* 60 \* ${{ env.HOURS_TO_RUN }});
+          COMMON_API_PARAMETERS="
+          --namespace ${{ github.repository }}/soak-tests
+          --start-time $(date -u -d '${{ env.HOURS_TO_RUN }} hours ago' +%FT%TZ)
+          --end-time $(date -u +%FT%TZ)
+          --period $HOURS_TO_RUN_IN_SECONDS
+          --region ${{ env.AWS_REGION }}
+          ";
+          OVERALL_CPU_LOAD=$(
+            aws cloudwatch get-metric-statistics $(echo $COMMON_API_PARAMETERS) \
+                                                 --dimensions Name=process.command_line,Value='${{ env.PROCESS_COMMAND_LINE }}' \
+                                                 --metric-name process.cpu.time \
+                                                 --statistics Maximum |
+            jq -r ".Datapoints[] | .Value=.Maximum/$HOURS_TO_RUN_IN_SECONDS/${{ env.ASSUMED_NUM_OF_CPUS }}*100 | {Name: \"Soak Test Overall CPU Load\", Value, Unit: \"Percent\"}"
+          )
+          AVERAGE_VIRTUAL_MEMORY=$(
+            aws cloudwatch get-metric-statistics $(echo $COMMON_API_PARAMETERS) \
+                                                 --dimensions Name=process.command_line,Value='${{ env.PROCESS_COMMAND_LINE }}' \
+                                                 --metric-name process.memory.virtual_usage \
+                                                 --statistics Average |
+            jq -r '.Datapoints[] | {Name: "Soak Test Average Virtual Memory Used", Value: .Average, Unit}'
+          );
+          jq -n "[$OVERALL_CPU_LOAD] + [$AVERAGE_VIRTUAL_MEMORY] | {benchmarks: .}" |
+          tee output.json
+      - name: Report on Soak Test Averages results
         uses: NathanielRN/github-action-benchmark@v1.8.2-alpha3
         with:
-          name: Soak Test Benchmarks - sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}
+          name: Soak Test Results - sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}
           tool: custombenchmark
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           max-items-in-chart: 100
-          # Alert with a commit comment on possible performance regression
           alert-threshold: 200%
+          # Does not work as expected, see: https://github.com/open-telemetry/opentelemetry-python/pull/1478
+          # comment-always: true
           # fail-on-alert: true
-          # Make a commit on `gh-pages` with benchmarks from previous step
           auto-push: ${{ github.ref == 'refs/heads/main' }}
           gh-pages-branch: gh-pages
-          benchmark-data-dir-path: benchmarks
+          benchmark-data-dir-path: soak-tests/per-commit-overall-results

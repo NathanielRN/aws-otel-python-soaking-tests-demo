@@ -1,0 +1,38 @@
+{
+    "metrics": [
+        [
+            "<LOGS_NAMESPACE>",
+            "process.cpu.time",
+            "process.command_line",
+            "<DIMENSION_1_VALUE>",
+            {
+                "id": "m1",
+                "label": "Process CPU Time Raw",
+                "visible": false
+            }
+        ],
+        [
+            {
+                "expression": "RATE(m1)/<ASSUMED_NUM_OF_CPUS>*100",
+                "id": "e1",
+                "label": "Process CPU Load Percentage for <ASSUMED_NUM_OF_CPUS> CPUs"
+            }
+        ]
+    ],
+    "view": "timeSeries",
+    "stacked": false,
+    "stat": "Maximum",
+    "period": 60,
+    "title": "Process CPU Load Percentage for <ASSUMED_NUM_OF_CPUS> CPUs",
+    "yAxis": {
+        "left": {
+            "label": "Percentage",
+            "showUnits": false
+        }
+    },
+    "liveData": false,
+    "width": 2043,
+    "height": 250,
+    "start": "-PT<HOURS_TO_RUN>H",
+    "end": "P0D"
+}
