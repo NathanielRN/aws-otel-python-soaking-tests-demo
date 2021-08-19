@@ -4,7 +4,7 @@ receivers:
       grpc:
         endpoint: 0.0.0.0:4317
   hostmetrics:
-    collection_interval: ${HOSTMETRICS_COLLECTION_INTERVAL}
+    collection_interval: ${HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS}
     scrapers:
       process:
         include:
@@ -47,17 +47,6 @@ exporters:
           # - process.disk.io
           - process.memory.physical_usage
           - process.memory.virtual_usage
-      # # Root access on CloudDesktop lets me see these more detailed metrics but not on GitHub?
-      # - dimensions: [[process.command_line, state]]
-      #   metric_name_selectors:
-      #     - process.cpu.time
-      # - dimensions: [[process.command_line, direction]]
-      #   metric_name_selectors:
-      #     - process.disk.io
-      # - dimensions: [[process.command_line, direction]]
-      #   metric_name_selectors:
-      #     - process.memory.physical_usage
-      #     - process.memory.virtual_usage
 
 service:
   pipelines:

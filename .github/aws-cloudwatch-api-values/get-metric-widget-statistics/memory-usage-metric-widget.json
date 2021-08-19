@@ -23,12 +23,11 @@
     ],
     "view": "timeSeries",
     "stacked": false,
-    "stat": "Maximum",
-    "period": 60,
+    "stat": "Sum",
+    "period": <METRIC_PERIOD>,
     "title": "Process Memory Usage",
     "yAxis": {
         "left": {
-            "label": "",
             "showUnits": true
         }
     },

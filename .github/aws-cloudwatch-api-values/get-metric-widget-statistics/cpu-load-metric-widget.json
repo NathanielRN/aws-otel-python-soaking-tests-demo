@@ -13,17 +13,17 @@
         ],
         [
             {
-                "expression": "RATE(m1)/<ASSUMED_NUM_OF_CPUS>*100",
+                "expression": "m1/PERIOD(m1)/<NUM_OF_CPUS>*100",
                 "id": "e1",
-                "label": "Process CPU Load Percentage for <ASSUMED_NUM_OF_CPUS> CPUs"
+                "label": "Process CPU Load Percentage for <NUM_OF_CPUS> CPUs"
             }
         ]
     ],
     "view": "timeSeries",
     "stacked": false,
-    "stat": "Maximum",
-    "period": 60,
-    "title": "Process CPU Load Percentage for <ASSUMED_NUM_OF_CPUS> CPUs",
+    "stat": "Sum",
+    "period": <METRIC_PERIOD>,
+    "title": "Process CPU Load Percentage for <NUM_OF_CPUS> CPUs",
     "yAxis": {
         "left": {
             "label": "Percentage",
