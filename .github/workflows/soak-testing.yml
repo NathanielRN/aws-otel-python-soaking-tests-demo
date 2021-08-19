@@ -11,6 +11,8 @@ env:
   # Global Env Vars
   AWS_REGION: us-west-2
   HOURS_TO_RUN: 5
+  # Add this?
+  # RATE: TPS
   HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
 
 jobs:
@@ -94,16 +96,7 @@ jobs:
         # run: docker-compose up -d --abort-on-container-exit
       # - name: Poll alarms during Soak Test
       #   continue-on-error: true
-      #   run: >-
-      #     while [ pgrep docker-compose ];
-      #     do
-      #       if [ aws cloudwatch describe-alarms ];
-      #         echo 'Failed with: ';
-      #         echo "::set-output name=FAILED_DURING_SOAK_TESTS::True"
-      #         exit 1;
-      #       fi;
-      #       sleep ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}s;
-      #     done
+      #   run: ./.github/scripts/poll-during-soack-tests.py ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
       #   id: check-failure-during-soak-tests
       - name: Get number of CPUs
         run: echo "::set-output name=NUM_OF_CPUS::$(nproc --all)"

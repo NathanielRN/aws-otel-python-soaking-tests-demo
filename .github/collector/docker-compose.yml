@@ -56,12 +56,15 @@ services:
 #       - LOG_GROUP_NAME=test
 #       - LOGS_NAMESPACE=test
 #       - LOG_STREAM_NAME=test
-#       - HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS=5
+#       - HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS=5s
 #       - PROCESS_COMMAND_LINE="/usr/local/bin/python3 application.py"
 #       - PROCESS_EXECUTABLE_NAME=python3
 #     volumes:
 #       - ./config:/config
 #       - $HOME/.aws:/.aws
+#       - type: bind
+#         source: /proc
+#         target: /proc
 #     ports:
 #       - '4317:4317'
 #     privileged: true
