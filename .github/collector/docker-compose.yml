@@ -56,13 +56,14 @@ services:
 #       - LOG_GROUP_NAME=test
 #       - LOGS_NAMESPACE=test
 #       - LOG_STREAM_NAME=test
-#       - HOSTMETRICS_COLLECTION_INTERVAL=5s
+#       - HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS=5
+#       - PROCESS_COMMAND_LINE="/usr/local/bin/python3 application.py"
+#       - PROCESS_EXECUTABLE_NAME=python3
 #     volumes:
 #       - ./config:/config
 #       - $HOME/.aws:/.aws
 #     ports:
 #       - '4317:4317'
-#     # This on Cloud Desktop lets you see more detailed metrics, but not on GitHub...
 #     privileged: true
 #     user: "0:${GID}"
 #     # user: "${UID}:${GID}"
