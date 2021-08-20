@@ -133,12 +133,12 @@ jobs:
           --end-time $(date -u +%FT%TZ)
           --period ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
           --region ${{ env.AWS_REGION }}
+          --statistics Sum;
           ";
           OVERALL_CPU_LOAD=$(
             aws cloudwatch get-metric-statistics $(echo $COMMON_API_PARAMETERS) \
                                                  --dimensions Name=process.command_line,Value='${{ env.PROCESS_COMMAND_LINE }}' \
-                                                 --metric-name process.cpu.time \
-                                                 --statistics Sum |
+                                                 --metric-name process.cpu.time |
             jq -r '{
               Name: "Soak Test Overall CPU Load",
               Value: [.Datapoints[].Sum] | (add / length / ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }} / ${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }} * 100),
@@ -148,8 +148,7 @@ jobs:
           AVERAGE_VIRTUAL_MEMORY=$(
             aws cloudwatch get-metric-statistics $(echo $COMMON_API_PARAMETERS) \
                                                  --dimensions Name=process.command_line,Value='${{ env.PROCESS_COMMAND_LINE }}' \
-                                                 --metric-name process.memory.virtual_usage \
-                                                 --statistics Sum |
+                                                 --metric-name process.memory.virtual_usage |
             jq -r "{
               Name: \"Soak Test Average Virtual Memory Used\",
               Value: [.Datapoints[].Sum] | (add / length / $(echo '2^20' | bc)),
