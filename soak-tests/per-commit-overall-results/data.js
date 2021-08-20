@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1629429213896,
+  "lastUpdate": 1629451861281,
   "repoUrl": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo",
   "entries": {
     "Soak Test Results - sample-app-flask-auto": [
@@ -63,6 +63,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "Soak Test Average Virtual Memory Used",
             "value": 756.7204241071429,
+            "unit": "Megabytes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "distinct": true,
+          "id": "1ea0c760a0fb8bd32eb466b03fdeb9d14b0d71cf",
+          "message": "Fix bug with extra semi colon in cli parameter",
+          "timestamp": "2021-08-20T02:30:31-07:00",
+          "tree_id": "85171b05483a154bf06f97917278030df1b2dfc0",
+          "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/1ea0c760a0fb8bd32eb466b03fdeb9d14b0d71cf"
+        },
+        "date": 1629451859994,
+        "tool": "custombenchmark",
+        "benches": [
+          {
+            "name": "Soak Test Overall CPU Load",
+            "value": 69.169,
+            "unit": "Percent"
+          },
+          {
+            "name": "Soak Test Average Virtual Memory Used",
+            "value": 784.87625,
             "unit": "Megabytes"
           }
         ]
