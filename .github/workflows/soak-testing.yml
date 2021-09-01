@@ -10,7 +10,7 @@ env:
   PROCESS_EXECUTABLE_NAME: python3
   # Global Env Vars
   AWS_REGION: us-west-2
-  HOURS_TO_RUN: 5
+  MINUTES_TO_RUN: 300
   # Add this?
   # RATE: TPS
   HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
@@ -90,7 +90,7 @@ jobs:
           PROCESS_COMMAND_LINE: ${{ env.PROCESS_COMMAND_LINE }}
           PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
           HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}s
-          SOAK_TEST_DURATION: ${{ env.HOURS_TO_RUN }}h
+          SOAK_TEST_DURATION: ${{ env.MINUTES_TO_RUN }}m
         run: docker-compose up -d
       - name: Poll alarms during Soak Test
         continue-on-error: true
@@ -106,7 +106,7 @@ jobs:
           do
             aws cloudwatch get-metric-widget-image --metric-widget "$(
               cat ./.github/aws-cloudwatch-api-values/get-metric-widget-statistics/$metric_kind-metric-widget.json |
-              sed -e "s/<HOURS_TO_RUN>/${{ env.HOURS_TO_RUN }}/g" \
+              sed -e "s/<MINUTES_TO_RUN>/${{ env.MINUTES_TO_RUN }}/g" \
                   -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
                   -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
                   -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
@@ -127,7 +127,7 @@ jobs:
         run: >-
           COMMON_API_PARAMETERS="
           --namespace ${{ github.repository }}/soak-tests
-          --start-time $(date -u -d '${{ env.HOURS_TO_RUN }} hours ago' +%FT%TZ)
+          --start-time $(date -u -d '${{ env.MINUTES_TO_RUN }} minutes ago' +%FT%TZ)
           --end-time $(date -u +%FT%TZ)
           --period ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
           --region ${{ env.AWS_REGION }}
