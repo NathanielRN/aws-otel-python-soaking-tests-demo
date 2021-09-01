@@ -24,7 +24,7 @@ window.BENCHMARK_DATA = {
         "tool": "custombenchmark",
         "benches": [
           {
-            "name": "Soak Test Overall CPU Load",
+            "name": "Soak Test Average CPU Load",
             "value": 70.26350000000001,
             "unit": "Percent"
           },
@@ -56,7 +56,7 @@ window.BENCHMARK_DATA = {
         "tool": "custombenchmark",
         "benches": [
           {
-            "name": "Soak Test Overall CPU Load",
+            "name": "Soak Test Average CPU Load",
             "value": 69.68005952380952,
             "unit": "Percent"
           },
@@ -90,7 +90,7 @@ window.BENCHMARK_DATA = {
         "tool": "custombenchmark",
         "benches": [
           {
-            "name": "Soak Test Overall CPU Load",
+            "name": "Soak Test Average CPU Load",
             "value": 69.169,
             "unit": "Percent"
           },
@@ -124,7 +124,7 @@ window.BENCHMARK_DATA = {
         "tool": "custombenchmark",
         "benches": [
           {
-            "name": "Soak Test Overall CPU Load",
+            "name": "Soak Test Average CPU Load",
             "value": 68.72851190476189,
             "unit": "Percent"
           },
@@ -158,7 +158,7 @@ window.BENCHMARK_DATA = {
         "tool": "custombenchmark",
         "benches": [
           {
-            "name": "Soak Test Overall CPU Load",
+            "name": "Soak Test Average CPU Load",
             "value": 69.40382183908046,
             "unit": "Percent"
           },
