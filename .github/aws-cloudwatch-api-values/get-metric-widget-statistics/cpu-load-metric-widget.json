@@ -7,7 +7,7 @@
             "<DIMENSION_1_VALUE>",
             {
                 "id": "m1",
-                "label": "Process CPU Time Raw",
+                "label": "CPU Time Raw",
                 "visible": false
             }
         ],
@@ -15,7 +15,7 @@
             {
                 "expression": "m1/PERIOD(m1)/<NUM_OF_CPUS>*100",
                 "id": "e1",
-                "label": "Process CPU Load Percentage for <NUM_OF_CPUS> CPUs"
+                "label": "CPU Load Percentage for <NUM_OF_CPUS> CPUs"
             }
         ]
     ],

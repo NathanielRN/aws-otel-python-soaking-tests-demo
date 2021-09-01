@@ -91,13 +91,11 @@ jobs:
           PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
           HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}s
           SOAK_TEST_DURATION: ${{ env.HOURS_TO_RUN }}h
-        run: docker-compose up --abort-on-container-exit
-      # Not possible...
-        # run: docker-compose up -d --abort-on-container-exit
-      # - name: Poll alarms during Soak Test
-      #   continue-on-error: true
-      #   run: ./.github/scripts/poll-during-soack-tests.py ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
-      #   id: check-failure-during-soak-tests
+        run: docker-compose up -d
+      - name: Poll alarms during Soak Test
+        continue-on-error: true
+        id: check-failure-during-soak-tests
+        run: ./.github/scripts/poll-during-soack-tests.py --polling-interval ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
       - name: Get number of CPUs
         run: echo "::set-output name=NUM_OF_CPUS::$(nproc --all)"
         id: get-num-of-cpus-step
@@ -135,12 +133,12 @@ jobs:
           --region ${{ env.AWS_REGION }}
           --statistics Sum
           ";
-          OVERALL_CPU_LOAD=$(
+          AVERAGE_CPU_LOAD=$(
             aws cloudwatch get-metric-statistics $(echo $COMMON_API_PARAMETERS) \
                                                  --dimensions Name=process.command_line,Value='${{ env.PROCESS_COMMAND_LINE }}' \
                                                  --metric-name process.cpu.time |
             jq -r '{
-              Name: "Soak Test Overall CPU Load",
+              Name: "Soak Test Average CPU Load",
               Value: [.Datapoints[].Sum] | (add / length / ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }} / ${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }} * 100),
               Unit: "Percent"
             }'
@@ -155,11 +153,12 @@ jobs:
               Unit: \"Megabytes\"
             }"
           );
-          jq -n "[$OVERALL_CPU_LOAD] + [$AVERAGE_VIRTUAL_MEMORY] | {benchmarks: .}" |
+          jq -n "[$AVERAGE_CPU_LOAD] + [$AVERAGE_VIRTUAL_MEMORY] | {benchmarks: .}" |
           tee output.json
       - name: Report on Soak Test Averages results
         uses: NathanielRN/github-action-benchmark@v1.8.2-alpha3
         continue-on-error: true
+        id: check-failure-after-soak-tests
         with:
           name: Soak Test Results - sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}
           tool: custombenchmark
@@ -173,25 +172,24 @@ jobs:
           auto-push: ${{ github.ref == 'refs/heads/main' }}
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: soak-tests/per-commit-overall-results
-        id: check-failure-after-soak-tests
-      # - name: Publish Issue if failed during Soak Tests
-      #   uses: JasonEtco/create-an-issue@v2
-      #   if: steps.check-failure-after-soak-tests.outcome == 'failure'
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     filename: .github/issue-templates/FAILURE-DURING-SOAK-TESTS.md
-      #     update_existing: true
-      # - name: Publish Issue if failed after Soak Tests
-      #   uses: JasonEtco/create-an-issue@v2
-      #   if: steps.check-failure-after-soak-tests.outcome == 'failure'
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     filename: .github/issue-templates/FAILURE-AFTER-SOAK-TESTS.md
-      #     update_existing: true
-      # - name: Determine if should fail the workflow
-      #   if: ${{ failure() }}
-      #   run: >-
-      #     echo 'Soak Tests failed, see logs for details';
-      #     exit 1;
+      - name: Publish Issue if failed during Soak Tests
+        uses: JasonEtco/create-an-issue@v2
+        if: steps.check-failure-after-soak-tests.outcome == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/issue-templates/FAILURE-DURING-SOAK-TESTS.md
+          update_existing: true
+      - name: Publish Issue if failed after Soak Tests
+        uses: JasonEtco/create-an-issue@v2
+        if: steps.check-failure-after-soak-tests.outcome == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/issue-templates/FAILURE-AFTER-SOAK-TESTS.md
+          update_existing: true
+      - name: Determine if should fail the workflow
+        if: ${{ failure() }}
+        run: >-
+          echo 'Soak Tests failed, see logs for details';
+          exit 1;

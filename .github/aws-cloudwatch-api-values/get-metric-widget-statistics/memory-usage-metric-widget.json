@@ -19,6 +19,13 @@
                 "id": "m1",
                 "label": "Physical Memory"
             }
+        ],
+        [
+            {
+                "expression": "SUM(METRICS())",
+                "label": "Total Memory",
+                "id": "e1"
+            }
         ]
     ],
     "view": "timeSeries",
