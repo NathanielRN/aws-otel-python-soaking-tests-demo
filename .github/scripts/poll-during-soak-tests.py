@@ -26,6 +26,7 @@ def parse_args():
     parser.add_argument(
         "--polling-interval",
         required=True,
+        type=int,
         help="""
         The interval with which the script polls the Soak Test alarms.
         In seconds.

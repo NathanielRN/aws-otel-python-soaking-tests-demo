@@ -23,7 +23,7 @@ jobs:
       contents: write
       packages: write
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         app-platform: [ flask ]
         # instrumentation-type: [ auto, manual ]
