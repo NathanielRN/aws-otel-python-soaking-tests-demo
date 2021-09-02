@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1630542604385,
+  "lastUpdate": 1630543558656,
   "repoUrl": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo",
   "entries": {
     "Soak Test Results - sample-app-flask-auto": [
@@ -233,6 +233,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "Soak Test Average Virtual Memory Used",
             "value": 742.8830078125,
+            "unit": "Megabytes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "nathanielruiz98@gmail.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "distinct": true,
+          "id": "9136466b00aa51fa1c9b3ada170a93adcc889071",
+          "message": "Updates to Python Alarm poller script",
+          "timestamp": "2021-09-01T17:43:25-07:00",
+          "tree_id": "7758877a4b7b7ad0dac41f567e68cfa26cb1c85f",
+          "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/9136466b00aa51fa1c9b3ada170a93adcc889071"
+        },
+        "date": 1630543558318,
+        "tool": "custombenchmark",
+        "benches": [
+          {
+            "name": "Soak Test Average CPU Load",
+            "value": 69.40236842105263,
+            "unit": "Percent"
+          },
+          {
+            "name": "Soak Test Average Virtual Memory Used",
+            "value": 715.6317845394736,
             "unit": "Megabytes"
           }
         ]
