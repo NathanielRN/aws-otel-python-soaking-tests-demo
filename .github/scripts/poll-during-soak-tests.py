@@ -67,7 +67,12 @@ if __name__ == "__main__":
 
     did_soak_test_fail_during = False
 
+    for process in psutil.process_iter():
+        print(process.name())
+
     docker_client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+
+    print(docker_client.containers.get("app-collector-combo_generate-load"))
 
     while (
         docker_client.containers.get("app-collector-combo_generate-load").attrs[
