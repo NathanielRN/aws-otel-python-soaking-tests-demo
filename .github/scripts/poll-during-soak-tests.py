@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 from contextlib import redirect_stdout
@@ -52,8 +53,6 @@ if __name__ == "__main__":
     while not soak_tests_docker_compose_process:
         try:
             for process in psutil.process_iter():
-                if "docker" in process.name():
-                    print("DEBUG: Found this process name - %s", process.name())
                 if process.name() == "dockerd":
                     soak_tests_docker_compose_process = process
                     logger.info("Found matching process: %s", str(process))
@@ -65,7 +64,7 @@ if __name__ == "__main__":
                 "Soak Tests `dockerd` process did not start after %s seconds",
                 SOAK_TESTS_STARTED_TIMEOUT,
             )
-            exec("exit 1")
+            sys.exit(1)
 
     did_soak_test_fail_during = False
 
@@ -73,7 +72,7 @@ if __name__ == "__main__":
         shell_output_buffer = StringIO()
 
         with redirect_stdout(shell_output_buffer):
-            exec(
+            os.system(
                 "aws cloudwatch describe-alarms --alarm-name-prefix 'OTel Python Soak Tests - '"
             )
 
@@ -93,10 +92,10 @@ if __name__ == "__main__":
     if did_soak_test_fail_during:
         logger.error(
             "Failing because of alarms triggered during Soak Test. Dumping dockerd output: %s",
-            exec(
+            os.system(
                 "tail -f /proc/%s/fd/1", soak_tests_docker_compose_process.pid()
             ),
         )
-        exec("exit 1")
+        sys.exit(1)
 
     logger.info("Done polling Soak Test alarms.")
