@@ -5,6 +5,7 @@ import os
 import sys
 import time
 
+import docker
 import psutil
 from psutil import NoSuchProcess
 
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     while not soak_tests_docker_compose_process:
         try:
             for process in psutil.process_iter():
-                if process.name() == "dockerd":
+                if process.name() == "docker-compose":
                     soak_tests_docker_compose_process = process
                     logger.info("Found matching process: %s", str(process))
                     break
@@ -59,14 +60,21 @@ if __name__ == "__main__":
             pass
         if time.time() - start > SOAK_TESTS_STARTED_TIMEOUT:
             logger.error(
-                "Soak Tests `dockerd` process did not start after %s seconds",
+                "Soak Tests `docker-compose` process did not start after %s seconds",
                 SOAK_TESTS_STARTED_TIMEOUT,
             )
             sys.exit(1)
 
     did_soak_test_fail_during = False
 
-    while psutil.pid_exists(soak_tests_docker_compose_process.pid):
+    docker_client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+
+    while (
+        docker_client.containers.get("app-collector-combo_generate-load").attrs[
+            "State"
+        ]["Status"]
+        == "running"
+    ):
         alarms_info = json.loads(
             os.popen(
                 "aws cloudwatch describe-alarms --alarm-name-prefix 'OTel Python Soak Tests - '"
@@ -87,9 +95,14 @@ if __name__ == "__main__":
 
         time.sleep(args.polling_interval)
 
+    for container_name in docker_client.containers:
+        container = docker_client.containers.get(container_name)
+        if container.attrs["State"]["Status"] == "running":
+            container.stop()
+
     if did_soak_test_fail_during:
         logger.error(
-            "Failing because of alarms triggered during Soak Test. Dumping dockerd output: %s",
+            "Failing because of alarms triggered during Soak Test. Dumping `docker-compose` output: %s",
             os.popen(
                 "tail -f /proc/%s/fd/1", soak_tests_docker_compose_process.pid()
             ).read(),

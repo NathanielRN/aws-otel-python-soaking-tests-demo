@@ -16,8 +16,8 @@ env:
   HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
 
 jobs:
-  test_apps:
-    name: Publish app and Soak Test
+  test_apps_and_publish_results:
+    name: Publish app and Soak Test - (${{ matrix.app-platform }}, ${{ matrix.instrumentation-type }})
     runs-on: ubuntu-latest
     permissions:
       contents: write # TODO: Do I need this?
@@ -80,31 +80,12 @@ jobs:
           PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
           HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}s
           SOAK_TEST_DURATION: ${{ env.MINUTES_TO_RUN }}m
-        run: docker-compose up --abort-on-container-exit
-  publish_results:
-    name: Poll Soak Test Alarms and publish results
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        app-platform: [ flask ]
-        # instrumentation-type: [ auto, manual ]
-        instrumentation-type: [ auto ]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+        run: docker-compose up -d
       - name: Poll alarms during Soak Test
         continue-on-error: true
         id: check-failure-during-soak-tests
         run: >-
-          pip install psutil;
+          pip install psutil docker;
           POLL_ALARM_EXIT_CODE=$(
             python3 ./.github/scripts/poll-during-soak-tests.py --polling-interval ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
           );
