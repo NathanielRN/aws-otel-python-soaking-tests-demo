@@ -4,8 +4,6 @@ import logging
 import os
 import sys
 import time
-from contextlib import redirect_stdout
-from io import StringIO
 
 import psutil
 from psutil import NoSuchProcess
@@ -68,14 +66,11 @@ if __name__ == "__main__":
     did_soak_test_fail_during = False
 
     while psutil.pid_exists(soak_tests_docker_compose_process.pid):
-        shell_output_buffer = StringIO()
-
-        with redirect_stdout(shell_output_buffer):
-            os.system(
+        alarms_info = json.loads(
+            os.popen(
                 "aws cloudwatch describe-alarms --alarm-name-prefix 'OTel Python Soak Tests - '"
-            )
-
-        alarms_info = json.loads(shell_output_buffer.getvalue())
+            ).read()
+        )
 
         for alarm in alarms_info["MetricAlarms"]:
             if alarm["StateValue"] == "ALARM":
@@ -85,15 +80,18 @@ if __name__ == "__main__":
                     alarm["StateReason"],
                 )
                 did_soak_test_fail_during = True
+            logger.info(
+                "Alarm %s was %s", alarm["AlarmName"], alarm["StateValue"]
+            )
 
         time.sleep(args.polling_interval)
 
     if did_soak_test_fail_during:
         logger.error(
             "Failing because of alarms triggered during Soak Test. Dumping dockerd output: %s",
-            os.system(
+            os.popen(
                 "tail -f /proc/%s/fd/1", soak_tests_docker_compose_process.pid()
-            ),
+            ).read(),
         )
         sys.exit(2)
 
