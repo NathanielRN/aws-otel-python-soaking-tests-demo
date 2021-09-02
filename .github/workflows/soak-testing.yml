@@ -86,11 +86,10 @@ jobs:
         id: check-failure-during-soak-tests
         run: >-
           pip install docker;
-          POLL_ALARM_EXIT_CODE=$(
-            python3 ./.github/scripts/poll-during-soak-tests.py --polling-interval ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
-          );
-          echo "::set-output name=POLL_ALARM_EXIT_CODE::$POLL_ALARM_EXIT_CODE"
-          exit $POLL_ALARM_EXIT_CODE
+          python3 ./.github/scripts/poll-during-soak-tests.py --polling-interval ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }};
+          POLL_ALARM_EXIT_CODE=$?;
+          echo "::set-output name=POLL_ALARM_EXIT_CODE::$POLL_ALARM_EXIT_CODE";
+          exit $POLL_ALARM_EXIT_CODE;
       - name: Check if polling Soak Test alarms failed to start correctly
         if: ${{ steps.check-failure-during-soak-tests.outputs.POLL_ALARM_EXIT_CODE }} == 1
         run: exit 1
