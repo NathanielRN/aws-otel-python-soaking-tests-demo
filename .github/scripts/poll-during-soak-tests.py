@@ -48,7 +48,6 @@ if __name__ == "__main__":
 
     start = time.time()
 
-
     soak_tests_docker_compose_process: psutil.Process = None
     while not soak_tests_docker_compose_process:
         try:
@@ -96,6 +95,6 @@ if __name__ == "__main__":
                 "tail -f /proc/%s/fd/1", soak_tests_docker_compose_process.pid()
             ),
         )
-        sys.exit(1)
+        sys.exit(2)
 
     logger.info("Done polling Soak Test alarms.")
