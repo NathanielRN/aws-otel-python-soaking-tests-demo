@@ -1,18 +1,19 @@
-import time
-import sys
 import argparse
-from threading import Timer
+import json
+import logging
+import sys
+import time
+from contextlib import redirect_stdout
+from io import StringIO
+
 import psutil
 from psutil import NoSuchProcess
-from io import StringIO
-from contextlib import redirect_stdout
-import json
-
-import logging
 
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__file__)
+
+SOAK_TESTS_STARTED_TIMEOUT = 10
 
 
 def parse_args():
@@ -40,53 +41,31 @@ def parse_args():
 
 
 if __name__ == "__main__":
+    logger.debug("Starting Alarm Polling Script.")
+
     args = parse_args()
 
-    class Watchdog(Exception):
-        def __init__(self, timeout, userHandler=None):
-            self.timeout = timeout
-            self.handler = (
-                userHandler if userHandler is not None else self.defaultHandler
-            )
-            self.timer = Timer(self.timeout, self.handler)
+    start = time.time()
 
-        def reset(self):
-            self.timer.cancel()
-            self.timer = Timer(self.timeout, self.handler)
-            self.timer.start()
-
-        def start(self):
-            self.timer.start()
-
-        def cancel(self):
-            self.timer.cancel()
-
-        def defaultHandler(self):
-            raise self
-
-    watchdog = Watchdog(10)
-    watchdog.start()
 
     soak_tests_docker_compose_process: psutil.Process = None
-
-    try:
-        while not soak_tests_docker_compose_process:
-            try:
-                for process in psutil.process_iter():
-                    if process.name() == "docker-compose":
-                        soak_tests_docker_compose_process = process
-                        break
-            except NoSuchProcess as exc:
-                pass
-            time.sleep(1)
-    except Watchdog as exc:
-        logger.error(
-            "Soak Tests `docker-compose` process did not start after %s seconds",
-            watchdog.timeout,
-        )
-        sys.exit(1)
-
-    watchdog.cancel()
+    while not soak_tests_docker_compose_process:
+        try:
+            for process in psutil.process_iter():
+                if "docker" in process.name():
+                    print("DEBUG: Found this process name - %s", process.name())
+                if process.name() == "dockerd":
+                    soak_tests_docker_compose_process = process
+                    logger.info("Found matching process: %s", str(process))
+                    break
+        except NoSuchProcess as exc:
+            pass
+        if time.time() - start > SOAK_TESTS_STARTED_TIMEOUT:
+            logger.error(
+                "Soak Tests `dockerd` process did not start after %s seconds",
+                SOAK_TESTS_STARTED_TIMEOUT,
+            )
+            sys.exit(1)
 
     did_soak_test_fail_during = False
 
@@ -113,7 +92,7 @@ if __name__ == "__main__":
 
     if did_soak_test_fail_during:
         logger.error(
-            "Failing because of alarms triggered during Soak Test. Dumping docker-compose output: %s",
+            "Failing because of alarms triggered during Soak Test. Dumping dockerd output: %s",
             exec(
                 "tail -f /proc/%s/fd/1", soak_tests_docker_compose_process.pid()
             ),

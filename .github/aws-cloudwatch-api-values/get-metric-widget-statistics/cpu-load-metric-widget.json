@@ -33,6 +33,6 @@
     "liveData": false,
     "width": 2043,
     "height": 250,
-    "start": "-PT<HOURS_TO_RUN>H",
+    "start": "-PT<MINUTES_TO_RUN>H",
     "end": "P0D"
 }
