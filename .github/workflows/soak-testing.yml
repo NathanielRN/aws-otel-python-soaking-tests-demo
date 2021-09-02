@@ -16,11 +16,11 @@ env:
   HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
 
 jobs:
-  test_apps_and_publish_results:
-    name: Publish App and Soak Test and Publish Results
+  test_apps:
+    name: Publish app and Soak Test
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # TODO: Do I need this?
       packages: write
     strategy:
       fail-fast: false
@@ -29,20 +29,9 @@ jobs:
         # instrumentation-type: [ auto, manual ]
         instrumentation-type: [ auto ]
     env:
-      APP_PATH: integration-test-apps/${{ matrix.instrumentation-type}}-instrumentation/${{ matrix.app-platform }}
       IMAGE_SUFFIX: sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-${{ github.sha }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        if: ${{ matrix.instrumentation-type }} == manual
-        with:
-          repository: open-telemetry/opentelemetry-python
-          path: ${{ env.APP_PATH }}/opentelemetry-python-core
-      - uses: actions/checkout@v2
-        if: ${{ matrix.instrumentation-type }} == manual
-        with:
-          repository: open-telemetry/opentelemetry-python-contrib
-          path: ${{ env.APP_PATH }}/opentelemetry-python-contrib
       - name: Log in to the GitHub Container Registry
         uses: docker/login-action@v1
         with:
@@ -67,7 +56,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          context: ${{ env.APP_PATH }}
+          context: integration-test-apps/${{ matrix.instrumentation-type}}-instrumentation/${{ matrix.app-platform }}
           tags: ${{ steps.docker-image-metadata.outputs.tags }}
           labels: ${{ steps.docker-image-metadata.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -91,7 +80,26 @@ jobs:
           PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
           HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}s
           SOAK_TEST_DURATION: ${{ env.MINUTES_TO_RUN }}m
-        run: docker-compose up -d
+        run: docker-compose up --abort-on-container-exit
+  publish_results:
+    name: Poll Soak Test Alarms and publish results
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        app-platform: [ flask ]
+        # instrumentation-type: [ auto, manual ]
+        instrumentation-type: [ auto ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
       - name: Poll alarms during Soak Test
         continue-on-error: true
         id: check-failure-during-soak-tests
@@ -178,7 +186,7 @@ jobs:
           auto-push: ${{ github.ref == 'refs/heads/main' }}
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: soak-tests/per-commit-overall-results
-      - name: Publish Issue if failed during Soak Tests
+      - name: Publish Issue if failed DURING Soak Tests
         uses: JasonEtco/create-an-issue@v2
         if: steps.check-failure-after-soak-tests.outcome == 'failure'
         env:
@@ -186,7 +194,7 @@ jobs:
         with:
           filename: .github/issue-templates/FAILURE-DURING-SOAK-TESTS.md
           update_existing: true
-      - name: Publish Issue if failed after Soak Tests
+      - name: Publish Issue if failed AFTER Soak Tests
         uses: JasonEtco/create-an-issue@v2
         if: steps.check-failure-after-soak-tests.outcome == 'failure'
         env:
@@ -195,7 +203,7 @@ jobs:
           filename: .github/issue-templates/FAILURE-AFTER-SOAK-TESTS.md
           update_existing: true
       - name: Determine if should fail the workflow
-        if: ${{ failure() }}
+        if: steps.check-failure-after-soak-tests.outcome == 'failure' || steps.check-failure-after-soak-tests.outcome == 'failure'
         run: >-
           echo 'Soak Tests failed, see logs for details';
           exit 1;
