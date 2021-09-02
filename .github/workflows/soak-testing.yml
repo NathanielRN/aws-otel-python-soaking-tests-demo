@@ -10,7 +10,7 @@ env:
   PROCESS_EXECUTABLE_NAME: python3
   # Global Env Vars
   AWS_REGION: us-west-2
-  MINUTES_TO_RUN: 300
+  MINUTES_TO_RUN: 15
   # Add this?
   # RATE: TPS
   HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
@@ -162,7 +162,7 @@ jobs:
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           max-items-in-chart: 100
-          alert-threshold: 200%
+          alert-threshold: 1%
           # Does not work as expected, see: https://github.com/open-telemetry/opentelemetry-python/pull/1478
           # comment-always: true
           fail-on-alert: true
