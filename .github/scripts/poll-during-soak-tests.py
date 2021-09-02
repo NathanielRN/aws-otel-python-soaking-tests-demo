@@ -52,7 +52,7 @@ if __name__ == "__main__":
     while not soak_tests_docker_compose_process:
         try:
             for process in psutil.process_iter():
-                if process.name() == "docker-compose":
+                if process.name() == "docker-proxy":
                     soak_tests_docker_compose_process = process
                     logger.info("Found matching process: %s", str(process))
                     break
@@ -60,7 +60,7 @@ if __name__ == "__main__":
             pass
         if time.time() - start > SOAK_TESTS_STARTED_TIMEOUT:
             logger.error(
-                "Soak Tests `docker-compose` process did not start after %s seconds",
+                "Soak Tests `docker-proxy` process did not start after %s seconds",
                 SOAK_TESTS_STARTED_TIMEOUT,
             )
             sys.exit(1)
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     if did_soak_test_fail_during:
         logger.error(
-            "Failing because of alarms triggered during Soak Test. Dumping `docker-compose` output: %s",
+            "Failing because of alarms triggered during Soak Test. Dumping `docker-proxy` output: %s",
             os.popen(
                 "tail -f /proc/%s/fd/1", soak_tests_docker_compose_process.pid()
             ).read(),
