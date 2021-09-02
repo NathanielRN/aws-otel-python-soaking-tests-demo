@@ -65,11 +65,11 @@ if __name__ == "__main__":
                 "Soak Tests `dockerd` process did not start after %s seconds",
                 SOAK_TESTS_STARTED_TIMEOUT,
             )
-            sys.exit(1)
+            exec("exit 1")
 
     did_soak_test_fail_during = False
 
-    while psutil.pid_exists(soak_tests_docker_compose_process.pid()):
+    while psutil.pid_exists(soak_tests_docker_compose_process.pid):
         shell_output_buffer = StringIO()
 
         with redirect_stdout(shell_output_buffer):
@@ -97,6 +97,6 @@ if __name__ == "__main__":
                 "tail -f /proc/%s/fd/1", soak_tests_docker_compose_process.pid()
             ),
         )
-        sys.exit(1)
+        exec("exit 1")
 
     logger.info("Done polling Soak Test alarms.")
