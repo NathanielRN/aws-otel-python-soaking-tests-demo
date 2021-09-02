@@ -85,7 +85,7 @@ jobs:
         continue-on-error: true
         id: check-failure-during-soak-tests
         run: >-
-          pip install psutil docker;
+          pip install docker;
           POLL_ALARM_EXIT_CODE=$(
             python3 ./.github/scripts/poll-during-soak-tests.py --polling-interval ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
           );

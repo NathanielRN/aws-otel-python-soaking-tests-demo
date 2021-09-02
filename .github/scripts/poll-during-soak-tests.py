@@ -6,8 +6,6 @@ import sys
 import time
 
 import docker
-import psutil
-from psutil import NoSuchProcess
 
 logging.basicConfig(level=logging.INFO)
 
@@ -48,16 +46,10 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    soak_tests_docker_compose_process: psutil.Process = None
-    while not soak_tests_docker_compose_process:
-        try:
-            for process in psutil.process_iter():
-                if process.name() == "docker-proxy":
-                    soak_tests_docker_compose_process = process
-                    logger.info("Found matching process: %s", str(process))
-                    break
-        except NoSuchProcess as exc:
-            pass
+    docker_client = docker.from_env()
+
+    while not docker_client.containers.list(filters={"status": "running"}):
+        logger.info("Detected docker containers are running")
         if time.time() - start > SOAK_TESTS_STARTED_TIMEOUT:
             logger.error(
                 "Soak Tests `docker-proxy` process did not start after %s seconds",
@@ -67,15 +59,8 @@ if __name__ == "__main__":
 
     did_soak_test_fail_during = False
 
-    for process in psutil.process_iter():
-        print(process.name())
-
-    docker_client = docker.DockerClient(base_url="unix://var/run/docker.sock")
-
-    print(docker_client.containers.get("app-collector-combo_generate-load"))
-
     while (
-        docker_client.containers.get("app-collector-combo_generate-load").attrs[
+        docker_client.containers.get("app-collector-combo_generate-load_1").attrs[
             "State"
         ]["Status"]
         == "running"
@@ -100,17 +85,17 @@ if __name__ == "__main__":
 
         time.sleep(args.polling_interval)
 
-    for container_name in docker_client.containers:
-        container = docker_client.containers.get(container_name)
-        if container.attrs["State"]["Status"] == "running":
-            container.stop()
+    for container in docker_client.containers.list(filters={"status": "running"}):
+        container.stop()
 
     if did_soak_test_fail_during:
         logger.error(
-            "Failing because of alarms triggered during Soak Test. Dumping `docker-proxy` output: %s",
-            os.popen(
-                "tail -f /proc/%s/fd/1", soak_tests_docker_compose_process.pid()
-            ).read(),
+            "Failing because of alarms triggered during Soak Test. Dumping logs: %s",
+            {
+                "app": docker_client.containers.get("app-collector-combo_app_1").logs(),
+                "collector": docker_client.containers.get("app-collector-combo_otel_1").logs(),
+                "load_generator": docker_client.containers.get("app-collector-combo_generate-load_1").logs(),
+            }
         )
         sys.exit(2)
 
