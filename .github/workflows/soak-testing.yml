@@ -72,17 +72,16 @@ jobs:
         run: echo "::set-output name=NUM_OF_CPUS::$(nproc --all)"
         id: get-num-of-cpus-step
       - name: Prepare Metric Data Queries JSON Inputs
-        id: prepared-metric-data-queries-json-inputs
         run: >-
           for metric_kind in cpu-load total-memory;
           do
-            echo "::set-output name=$metric_kind::\"$(
+            echo "$(
               cat ./.github/aws-cloudwatch-api-values/get-metric-data/$metric_kind-metric-data-query.json |
               sed -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
                   -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
                   -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
                   -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
-            )\"";
+            )" > ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-$metric_kind-metric-data-query.json;
           done
       - name: Create Soak Test alarms
         run: >-
@@ -96,12 +95,12 @@ jobs:
             --alarm-name 'OTel Python Soak Tests - CPU Load Percentage Spike'
             --alarm-description 'Triggers when the CPU Load Percentage spikes above the allowed threshold DURING the Soak Test.' \
             --threshold 69.5
-            --cli-input-json "{ \"Metrics\": ${{ steps.prepared-metric-data-queries-json-inputs.outputs.cpu-load }} }"
+            --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json) }"
           aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
             --alarm-name 'OTel Python Soak Tests - Virtual Memory Usage Spike'
             --alarm-description 'Triggers when the Virtual Memory Usage spikes above the allowed threshold DURING the Soak Test.' \
             --threshold "$(echo '1.5 * 2^30' | bc)"
-            --cli-input-json "{ \"Metrics\": ${{ steps.prepared-metric-data-queries-json-inputs.outputs.total-memory }} }"
+            --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json) }"
       - name: Run Sample App & OTel Collector + Load Generator
         working-directory: .github/app-collector-combo
         env:
@@ -153,7 +152,9 @@ jobs:
           --end-time $(date -u +%FT%TZ)
           );
           METRIC_DATA_QUERY_INPUT_JSON=$(
-            jq '{ [ inputs ] | add }' ${{ steps.prepared-metric-data-queries-json-inputs.outputs.cpu-load }} ${{ steps.prepared-metric-data-queries-json-inputs.outputs.total-memory }}
+            jq '{ [ inputs ] | add }' \
+            $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json) \
+            $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json)
           );
           aws cloudwatch get-metric-data "${COMMON_API_PARAMETERS[@]}" --cli-input-json "{ \"MetricDataQueries\": $METRIC_DATA_QUERY_INPUT_JSON" |
           jq "{
