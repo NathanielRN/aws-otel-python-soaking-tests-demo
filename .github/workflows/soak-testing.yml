@@ -76,13 +76,13 @@ jobs:
         run: >-
           for metric_kind in cpu-load total-memory;
           do
-            echo "::set-output name=$metric_kind::$(
-                cat ./.github/aws-cloudwatch-api-values/get-metric-data/$metric_kind-metric-data-query.json |
-                sed -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
-                    -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
-                    -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
-                    -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
-              )";
+            echo "::set-output name=$metric_kind::\"$(
+              cat ./.github/aws-cloudwatch-api-values/get-metric-data/$metric_kind-metric-data-query.json |
+              sed -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
+                  -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
+                  -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
+                  -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
+            )\"";
           done
       - name: Create Soak Test alarms
         run: >-
