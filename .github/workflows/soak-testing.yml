@@ -10,10 +10,10 @@ env:
   PROCESS_EXECUTABLE_NAME: python3
   # Global Env Vars
   AWS_REGION: us-west-2
-  SOAK_TEST_DURATION_IN_MINUTES: 15
+  SOAK_TEST_DURATION_IN_MINUTES: 1
   # Add this?
   # RATE: TPS
-  HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 300
+  HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 10
 
 jobs:
   test_apps_and_publish_results:
@@ -74,29 +74,31 @@ jobs:
           for metric_kind in cpu-load total-memory;
           do
             echo "::set-output name=$metric_kind::$(
-                cat ./.github/aws-cloudwatch-api-values/get-metric-data/$metric_kind-metric-widget.json |
+                cat ./.github/aws-cloudwatch-api-values/get-metric-data/$metric_kind-metric-data-query.json |
                 sed -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
                     -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
                     -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
                     -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
               )";
           done
-      # - name: Create Soak Test alarms
-      #   run: >-
-      #     declare -a COMMON_API_PARAMETERS=(
-      #     --namespace ${{ github.repository }}/soak-tests
-      #     --evaluation-periods 1
-      #     --datapoints-to-alarm 1
-      #     --comparison-operator GreaterThanOrEqualToThreshold
-      #     --treat-missing-data breaching
-      #     );
-      #     aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
-      #       --alarm-name 'OTel Python Soak Tests - CPU Load Percentage Spike'
-      #       --alarm-description 'Triggers when the CPU Load Percentage spikes above the allowed threshold DURING the Soak Test.' \
-      #       --threshold 69.5
-      #       --metrics
-      #       --metric-name
-      #     aws cloudwatch put-metric-alarm --alarm-name 'OTel Python Soak Tests - Virtual Memory Usage Spike'
+      - name: Create Soak Test alarms
+        run: >-
+          declare -a COMMON_API_PARAMETERS=(
+          --evaluation-periods 1
+          --datapoints-to-alarm 1
+          --comparison-operator GreaterThanOrEqualToThreshold
+          --treat-missing-data breaching
+          );
+          aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
+            --alarm-name 'OTel Python Soak Tests - CPU Load Percentage Spike'
+            --alarm-description 'Triggers when the CPU Load Percentage spikes above the allowed threshold DURING the Soak Test.' \
+            --threshold 69.5
+            --cli-input-json "{ \"Metrics\": ${{ steps.prepared-metric-data-queries-json-inputs.outputs.cpu-load }} }"
+          aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
+            --alarm-name 'OTel Python Soak Tests - Virtual Memory Usage Spike'
+            --alarm-description 'Triggers when the Virtual Memory Usage spikes above the allowed threshold DURING the Soak Test.' \
+            --threshold "$(echo '1.5 * 2^30' | bc)"
+            --cli-input-json "{ \"Metrics\": ${{ steps.prepared-metric-data-queries-json-inputs.outputs.total-memory }} }"
       - name: Run Sample App & OTel Collector + Load Generator
         working-directory: .github/app-collector-combo
         env:
@@ -151,19 +153,39 @@ jobs:
           --end-time $(date -u +%FT%TZ)
           );
           METRIC_DATA_QUERY_INPUT_JSON=$(
-            jq -n '{ MetricDataQueries: [ inputs.MetricDataQueries ] | add }' ${{ steps.prepared-metric-data-queries-json-inputs.outputs.cpu-load }} ${{ steps.prepared-metric-data-queries-json-inputs.outputs.total-memory }}
+            jq '{ [ inputs ] | add }' ${{ steps.prepared-metric-data-queries-json-inputs.outputs.cpu-load }} ${{ steps.prepared-metric-data-queries-json-inputs.outputs.total-memory }}
           );
-          aws cloudwatch get-metric-data "${COMMON_API_PARAMETERS[@]}" --cli-input-json $METRIC_DATA_QUERY_INPUT_JSON |
+          aws cloudwatch get-metric-data "${COMMON_API_PARAMETERS[@]}" --cli-input-json "{ \"MetricDataQueries\": $METRIC_DATA_QUERY_INPUT_JSON" |
           jq "{
             benchmarks: [
               {
                 Name: \"Soak Test Average CPU Load\",
-                Value: first(.MetricDataResults[] | select(.Id == \"cpu_load_expr\")) | .Values | ( add / length / ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }} / ${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }} * 100 ),
+                Value: first(
+                    .MetricDataResults[] |
+                    select(.Id == \"cpu_load_expr\")
+                  ) |
+                  .Values |
+                  (
+                    add /
+                    length /
+                    ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }} /
+                    ${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }} *
+                    100
+                  ),
                 Unit: \"Percent\"
               },
               {
                 Name: \"Soak Test Average Virtual Memory Used\",
-                Value: first(.MetricDataResults[] | select(.Id == \"total_memory_expr\")) | .Values | ( add / length / $(echo '2^20' | bc) ),
+                Value: first(
+                    .MetricDataResults[] |
+                    select(.Id == \"total_memory_expr\")
+                  ) |
+                  .Values |
+                  (
+                    add /
+                    length /
+                    $(echo '2^20' | bc)
+                  ),
                 Unit: \"Megabytes\"
               }
             ]
@@ -207,3 +229,6 @@ jobs:
         run: >-
           echo 'Soak Tests failed, see the logs above for details';
           exit 1;
+      - name: Delete Soak Test alarms
+        run: >-
+          aws cloudwatch delete-alarms --alarm-names 'OTel Python Soak Tests - CPU Load Percentage Spike' 'OTel Python Soak Tests - Virtual Memory Usage Spike'
