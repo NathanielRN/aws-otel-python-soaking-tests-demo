@@ -1,13 +1,15 @@
 ---
-title: Performance Threshold breached during Soak Tests execution
+title: Performance Threshold breached during Soak Tests execution {{ date | date('dddd, MMMM Do') }}
 assignees: NathanielRN
-labels: bug, enhancement
+# labels: bug, enhancement
 ---
-During the Soak Tests execution, a performance degradation was revealed for {{ tools.context.ref }} on commit {{ tools.context.sha }}. Check out the Action Logs to view the threshold violation.
+<!-- During the Soak Tests execution, a performance degradation was revealed for {{ tools.context.ref }} on commit {{ tools.context.sha }}. Check out the Action Logs to view the threshold violation. -->
 
-Also check out:
+Test: {{ payload.sender.login }}
+
+<!-- Also check out:
 
 CONTEXT ACTOR - {{ tools.context.actor }}
 CONTEXT EVENT - {{ tools.context.event }}
 CONTEXT PAYLOAD - {{ tools.context.payload }}
-CONTEXT WORKFLOW - {{ tools.context.workflow }}
+CONTEXT WORKFLOW - {{ tools.context.workflow }} -->

@@ -22,6 +22,7 @@ jobs:
     permissions:
       contents: write # TODO: Do I need this?
       packages: write
+      issues: write
     strategy:
       fail-fast: false
       matrix:
