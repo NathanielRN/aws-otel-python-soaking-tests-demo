@@ -153,8 +153,8 @@ jobs:
           );
           METRIC_DATA_QUERY_INPUT_JSON=$(
             jq "{ [ inputs ] | add }" \
-            $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json) \
-            $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json)
+            "$(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json)" \
+            "$(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json)"
           );
           aws cloudwatch get-metric-data "${COMMON_API_PARAMETERS[@]}" --cli-input-json "{ \"MetricDataQueries\": $METRIC_DATA_QUERY_INPUT_JSON" |
           jq "{
