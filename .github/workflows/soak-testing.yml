@@ -86,13 +86,11 @@ jobs:
       - name: Create Soak Test alarms
         run: >-
           declare -a COMMON_API_PARAMETERS=(
-          --evaluation-periods 1
-          --datapoints-to-alarm 1
+          --evaluation-periods 5
+          --datapoints-to-alarm 5
           --comparison-operator GreaterThanOrEqualToThreshold
           --treat-missing-data breaching
           );
-          cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json;
-          cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json;
           aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
             --alarm-name 'OTel Python Soak Tests - CPU Load Percentage Spike' \
             --alarm-description 'Triggers when the CPU Load Percentage spikes above the allowed threshold DURING the Soak Test.' \
@@ -154,7 +152,7 @@ jobs:
           --end-time $(date -u +%FT%TZ)
           );
           METRIC_DATA_QUERY_INPUT_JSON=$(
-            jq '{ [ inputs ] | add }' \
+            jq "{ [ inputs ] | add }" \
             $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json) \
             $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json)
           );
