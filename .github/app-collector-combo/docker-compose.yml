@@ -37,13 +37,22 @@ services:
     ports:
       - '8080:8080'
 
-  generate-load:
+  load-generator:
     build:
-      context: .
-    command: hey -z ${SOAK_TEST_DURATION} http://app:8080/outgoing-http-call
+      context: ./load-generator
+    environment:
+      - SOAK_TEST_DURATION_IN_MINUTES
     depends_on:
       - otel
       - app
+
+  alarms-poller:
+    build:
+      context: ./alarms-poller
+    environment:
+      - HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS
+    depends_on:
+      - load-generator
 
 # # To run on Cloud Desktop:
 # #
@@ -86,7 +95,7 @@ services:
 #     ports:
 #       - '8080:8080'
 
-#   generate-load:
+#   load-generator:
 #     build:
 #       context: .
 #     command: hey -z 30s http://app:8080/outgoing-http-call
