@@ -86,8 +86,11 @@ jobs:
         id: check-failure-during-soak-tests
         run: >-
           pip install docker;
-          python3 -c "import docker; client = docker.from_env(); print([c.name for c in client.containers.list(filters={'status': 'running'})]);"
           python3 ./.github/scripts/poll-during-soak-tests.py --polling-interval ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }};
+          exit 2
+      - name: Check if polling Soak Test alarms failed to start correctly
+        if: ${{ steps.check-failure-during-soak-tests.outputs.exit_code }} == 1
+        run: echo ${{ steps.check-failure-during-soak-tests.outputs.exit_code }}
       # - name: Get number of CPUs
       #   run: echo "::set-output name=NUM_OF_CPUS::$(nproc --all)"
       #   id: get-num-of-cpus-step
