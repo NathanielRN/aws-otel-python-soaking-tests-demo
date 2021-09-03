@@ -49,14 +49,16 @@ if __name__ == "__main__":
 
     docker_client = docker.from_env()
 
+    print("Currently running containers: ", [c.name for c in docker_client.containers.list(filters={"status": "running"})])
     while LOAD_GENERATOR_CONTAINER_NAME not in [c.name for c in docker_client.containers.list(filters={"status": "running"})]:
         logger.info("Load Generator container has not started.")
         if time.time() - start > SOAK_TESTS_STARTED_TIMEOUT:
             logger.error(
-                "Soak Tests `docker-proxy` process did not start after %s seconds",
+                "Soak Tests docker container process did not start after %s seconds",
                 SOAK_TESTS_STARTED_TIMEOUT,
             )
             sys.exit(1)
+        print("Currently running containers: ", [c.name for c in docker_client.containers.list(filters={"status": "running"})])
         time.sleep(1)
 
     did_soak_test_fail_during = False
