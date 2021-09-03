@@ -12,6 +12,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__file__)
 
 LOAD_GENERATOR_CONTAINER_NAME = "app-collector-combo_generate-load_1"
+APP_CONTAINER_NAME = "app-collector-combo_app_1"
+COLLECTOR_CONTAINER_NAME = "app-collector-combo_otel_1"
 SOAK_TESTS_STARTED_TIMEOUT = 10
 
 
@@ -45,23 +47,11 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    start = time.time()
-
     docker_client = docker.from_env()
 
-    print("Currently running containers: ", [c.name for c in docker_client.containers.list(filters={"status": "running"})])
-    while LOAD_GENERATOR_CONTAINER_NAME not in [c.name for c in docker_client.containers.list(filters={"status": "running"})]:
-        logger.info("Load Generator container has not started.")
-        if time.time() - start > SOAK_TESTS_STARTED_TIMEOUT:
-            logger.error(
-                "Soak Tests docker container process did not start after %s seconds",
-                SOAK_TESTS_STARTED_TIMEOUT,
-            )
-            sys.exit(1)
-        print("Currently running containers: ", [c.name for c in docker_client.containers.list(filters={"status": "running"})])
-        time.sleep(1)
-
     did_soak_test_fail_during = False
+
+    print("Currently running containers: ", [c.name for c in docker_client.containers.list(filters={"status": "running"})])
 
     while (
         docker_client.containers.get(
@@ -69,6 +59,7 @@ if __name__ == "__main__":
         ).attrs["State"]["Status"]
         == "running"
     ):
+        logger.info("Load Generator container is still running.")
         alarms_info = json.loads(
             os.popen(
                 "aws cloudwatch describe-alarms --alarm-name-prefix 'OTel Python Soak Tests - '"
@@ -89,22 +80,20 @@ if __name__ == "__main__":
 
         time.sleep(args.polling_interval)
 
-    for container in docker_client.containers.list(
-        filters={"status": "running"}
-    ):
-        container.stop()
+    for container_name in [APP_CONTAINER_NAME, COLLECTOR_CONTAINER_NAME]:
+        docker_client.containers.get(container_name).stop()
 
     if did_soak_test_fail_during:
         logger.error(
             "Failing because of alarms triggered during Soak Test. Dumping logs: %s",
             {
-                "app": docker_client.containers.get(
-                    "app-collector-combo_app_1"
+                APP_CONTAINER_NAME: docker_client.containers.get(
+                    APP_CONTAINER_NAME
                 ).logs(),
-                "collector": docker_client.containers.get(
-                    "app-collector-combo_otel_1"
+                COLLECTOR_CONTAINER_NAME: docker_client.containers.get(
+                    COLLECTOR_CONTAINER_NAME
                 ).logs(),
-                "load_generator": docker_client.containers.get(
+                LOAD_GENERATOR_CONTAINER_NAME: docker_client.containers.get(
                     LOAD_GENERATOR_CONTAINER_NAME
                 ).logs(),
             },
