@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__file__)
 
-LOAD_GENERATOR_CONTAINER_NAME = "app-collector-combo_generate-load_1"
+LOAD_GENERATOR_CONTAINER_NAME = "app-collector-combo_load-generator_1"
 APP_CONTAINER_NAME = "app-collector-combo_app_1"
 COLLECTOR_CONTAINER_NAME = "app-collector-combo_otel_1"
 SOAK_TESTS_STARTED_TIMEOUT = 10
@@ -50,8 +50,6 @@ if __name__ == "__main__":
     docker_client = docker.from_env()
 
     did_soak_test_fail_during = False
-
-    print("Currently running containers: ", [c.name for c in docker_client.containers.list(filters={"status": "running"})])
 
     while (
         docker_client.containers.get(
