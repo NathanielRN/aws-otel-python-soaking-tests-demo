@@ -60,9 +60,9 @@ if __name__ == "__main__":
     did_soak_test_fail_during = False
 
     while (
-        docker_client.containers.get("app-collector-combo_generate-load_1").attrs[
-            "State"
-        ]["Status"]
+        docker_client.containers.get(
+            "app-collector-combo_generate-load_1"
+        ).attrs["State"]["Status"]
         == "running"
     ):
         alarms_info = json.loads(
@@ -85,17 +85,25 @@ if __name__ == "__main__":
 
         time.sleep(args.polling_interval)
 
-    for container in docker_client.containers.list(filters={"status": "running"}):
+    for container in docker_client.containers.list(
+        filters={"status": "running"}
+    ):
         container.stop()
 
     if did_soak_test_fail_during:
         logger.error(
             "Failing because of alarms triggered during Soak Test. Dumping logs: %s",
             {
-                "app": docker_client.containers.get("app-collector-combo_app_1").logs(),
-                "collector": docker_client.containers.get("app-collector-combo_otel_1").logs(),
-                "load_generator": docker_client.containers.get("app-collector-combo_generate-load_1").logs(),
-            }
+                "app": docker_client.containers.get(
+                    "app-collector-combo_app_1"
+                ).logs(),
+                "collector": docker_client.containers.get(
+                    "app-collector-combo_otel_1"
+                ).logs(),
+                "load_generator": docker_client.containers.get(
+                    "app-collector-combo_generate-load_1"
+                ).logs(),
+            },
         )
         sys.exit(2)
 
