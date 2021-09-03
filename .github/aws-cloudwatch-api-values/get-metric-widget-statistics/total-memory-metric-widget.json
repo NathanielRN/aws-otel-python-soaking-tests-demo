@@ -4,7 +4,7 @@
             "<LOGS_NAMESPACE>",
             "process.memory.virtual_usage",
             "process.command_line",
-            "<DIMENSION_1_VALUE>",
+            "<PROCESS_COMMAND_LINE_DIMENSION_VALUE>",
             {
                 "id": "m2",
                 "label": "Virtual Memory"

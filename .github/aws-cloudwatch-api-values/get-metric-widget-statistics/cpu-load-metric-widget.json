@@ -4,7 +4,7 @@
             "<LOGS_NAMESPACE>",
             "process.cpu.time",
             "process.command_line",
-            "<DIMENSION_1_VALUE>",
+            "<PROCESS_COMMAND_LINE_DIMENSION_VALUE>",
             {
                 "id": "m1",
                 "label": "CPU Time Raw",

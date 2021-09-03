@@ -68,6 +68,35 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+      - name: Prepare Metric Data Queries JSON Inputs
+        id: prepared-metric-data-queries-json-inputs
+        run: >-
+          for metric_kind in cpu-load total-memory;
+          do
+            echo "::set-output name=$metric_kind::$(
+                cat ./.github/aws-cloudwatch-api-values/get-metric-data/$metric_kind-metric-widget.json |
+                sed -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
+                    -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
+                    -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
+                    -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
+              )";
+          done
+      # - name: Create Soak Test alarms
+      #   run: >-
+      #     declare -a COMMON_API_PARAMETERS=(
+      #     --namespace ${{ github.repository }}/soak-tests
+      #     --evaluation-periods 1
+      #     --datapoints-to-alarm 1
+      #     --comparison-operator GreaterThanOrEqualToThreshold
+      #     --treat-missing-data breaching
+      #     );
+      #     aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
+      #       --alarm-name 'OTel Python Soak Tests - CPU Load Percentage Spike'
+      #       --alarm-description 'Triggers when the CPU Load Percentage spikes above the allowed threshold DURING the Soak Test.' \
+      #       --threshold 69.5
+      #       --metrics
+      #       --metric-name
+      #     aws cloudwatch put-metric-alarm --alarm-name 'OTel Python Soak Tests - Virtual Memory Usage Spike'
       - name: Run Sample App & OTel Collector + Load Generator
         working-directory: .github/app-collector-combo
         env:
@@ -94,7 +123,7 @@ jobs:
       - name: Get a snapshot of metrics
         run: >-
           mkdir -p soak-tests/snapshots/${{ github.sha }};
-          for metric_kind in cpu-load memory-usage;
+          for metric_kind in cpu-load total-memory;
           do
             aws cloudwatch get-metric-widget-image --metric-widget "$(
               cat ./.github/aws-cloudwatch-api-values/get-metric-widget-statistics/$metric_kind-metric-widget.json |
@@ -102,7 +131,7 @@ jobs:
                   -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
                   -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
                   -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
-                  -e "s/<DIMENSION_1_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
+                  -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
             )" |
             jq -r '.MetricWidgetImage' |
             base64 -d > soak-tests/snapshots/${{ github.sha }}/${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-$metric_kind-results.png;
@@ -118,31 +147,27 @@ jobs:
       - name: Prepare Soak Test results as JSON output
         run: >-
           declare -a COMMON_API_PARAMETERS=(
-          --namespace ${{ github.repository }}/soak-tests
           --start-time $(date -u -d '${{ env.SOAK_TEST_DURATION_IN_MINUTES }} minutes ago' +%FT%TZ)
           --end-time $(date -u +%FT%TZ)
-          --period ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
-          --region ${{ env.AWS_REGION }}
-          --statistics Sum
-          --dimensions Name=process.command_line,Value='${{ env.PROCESS_COMMAND_LINE }}'
           );
-          AVERAGE_CPU_LOAD=$(
-            aws cloudwatch get-metric-statistics "${COMMON_API_PARAMETERS[@]}" --metric-name process.cpu.time |
-            jq -r '{
-              Name: "Soak Test Average CPU Load",
-              Value: [.Datapoints[].Sum] | (add / length / ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }} / ${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }} * 100),
-              Unit: "Percent"
-            }'
-          )
-          AVERAGE_VIRTUAL_MEMORY=$(
-            aws cloudwatch get-metric-statistics "${COMMON_API_PARAMETERS[@]}" --metric-name process.memory.virtual_usage |
-            jq -r "{
-              Name: \"Soak Test Average Virtual Memory Used\",
-              Value: [.Datapoints[].Sum] | (add / length / $(echo '2^20' | bc)),
-              Unit: \"Megabytes\"
-            }"
+          METRIC_DATA_QUERY_INPUT_JSON=$(
+            jq -n '{ MetricDataQueries: [ inputs.MetricDataQueries ] | add }' ${{ steps.prepared-metric-data-queries-json-inputs.outputs.cpu-load }} ${{ steps.prepared-metric-data-queries-json-inputs.outputs.total-memory }}
           );
-          jq -n "[$AVERAGE_CPU_LOAD] + [$AVERAGE_VIRTUAL_MEMORY] | {benchmarks: .}" |
+          aws cloudwatch get-metric-data "${COMMON_API_PARAMETERS[@]}" --cli-input-json $METRIC_DATA_QUERY_INPUT_JSON |
+          jq "{
+            benchmarks: [
+              {
+                Name: \"Soak Test Average CPU Load\",
+                Value: first(.MetricDataResults[] | select(.Id == \"cpu_load_expr\")) | .Values | ( add / length / ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }} / ${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }} * 100 ),
+                Unit: \"Percent\"
+              },
+              {
+                Name: \"Soak Test Average Virtual Memory Used\",
+                Value: first(.MetricDataResults[] | select(.Id == \"total_memory_expr\")) | .Values | ( add / length / $(echo '2^20' | bc) ),
+                Unit: \"Megabytes\"
+              }
+            ]
+          }" |
           tee output.json
       - name: Report on Soak Test Averages results
         uses: NathanielRN/github-action-benchmark@v1.8.2-alpha3
