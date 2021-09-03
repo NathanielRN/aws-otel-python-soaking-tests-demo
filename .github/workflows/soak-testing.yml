@@ -94,14 +94,14 @@ jobs:
           cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json;
           cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json;
           aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
-            --alarm-name 'OTel Python Soak Tests - CPU Load Percentage Spike'
+            --alarm-name 'OTel Python Soak Tests - CPU Load Percentage Spike' \
             --alarm-description 'Triggers when the CPU Load Percentage spikes above the allowed threshold DURING the Soak Test.' \
-            --threshold 69.5
+            --threshold 69.5 \
             --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json) }"
           aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
-            --alarm-name 'OTel Python Soak Tests - Virtual Memory Usage Spike'
+            --alarm-name 'OTel Python Soak Tests - Virtual Memory Usage Spike' \
             --alarm-description 'Triggers when the Virtual Memory Usage spikes above the allowed threshold DURING the Soak Test.' \
-            --threshold "$(echo '1.5 * 2^30' | bc)"
+            --threshold "$(echo '1.5 * 2^30' | bc)" \
             --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json) }"
       - name: Run Sample App & OTel Collector + Load Generator
         working-directory: .github/app-collector-combo
