@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__file__)
 
+LOAD_GENERATOR_CONTAINER_NAME = "app-collector-combo_generate-load_1"
 SOAK_TESTS_STARTED_TIMEOUT = 10
 
 
@@ -48,20 +49,21 @@ if __name__ == "__main__":
 
     docker_client = docker.from_env()
 
-    while not docker_client.containers.list(filters={"status": "running"}):
-        logger.info("Detected docker containers are running")
+    while LOAD_GENERATOR_CONTAINER_NAME not in [c.name for c in docker_client.containers.list(filters={"status": "running"})]:
+        logger.info("Load Generator container has not started.")
         if time.time() - start > SOAK_TESTS_STARTED_TIMEOUT:
             logger.error(
                 "Soak Tests `docker-proxy` process did not start after %s seconds",
                 SOAK_TESTS_STARTED_TIMEOUT,
             )
             sys.exit(1)
+        time.sleep(1)
 
     did_soak_test_fail_during = False
 
     while (
         docker_client.containers.get(
-            "app-collector-combo_generate-load_1"
+            LOAD_GENERATOR_CONTAINER_NAME
         ).attrs["State"]["Status"]
         == "running"
     ):
@@ -101,7 +103,7 @@ if __name__ == "__main__":
                     "app-collector-combo_otel_1"
                 ).logs(),
                 "load_generator": docker_client.containers.get(
-                    "app-collector-combo_generate-load_1"
+                    LOAD_GENERATOR_CONTAINER_NAME
                 ).logs(),
             },
         )
