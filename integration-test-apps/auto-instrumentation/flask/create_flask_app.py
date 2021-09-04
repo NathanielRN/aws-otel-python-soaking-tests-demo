@@ -16,7 +16,7 @@ from opentelemetry.sdk.extension.aws.trace.propagation.aws_xray_format import (
     TRACE_ID_VERSION,
 )
 
-if os.environ.get('FLASK_LOG_LEVEL') == 'ERROR':
+if os.environ.get('SAMPLE_APP_LOG_LEVEL') == 'ERROR':
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
 
