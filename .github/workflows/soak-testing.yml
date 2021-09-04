@@ -103,6 +103,8 @@ jobs:
             --threshold "$(echo '1.5 * 2^30' | bc)" \
             --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json) }"
       - name: Run All Docker Containers - Sample App + OTel Collector + Load Generator + Alarm Poller
+        id: check-failure-during-soak-tests
+        continue-on-error: true
         working-directory: .github/docker-containers
         env:
           APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
@@ -208,7 +210,7 @@ jobs:
           benchmark-data-dir-path: soak-tests/per-commit-overall-results
       - name: Publish Issue if failed DURING Soak Tests
         uses: JasonEtco/create-an-issue@v2
-        if: steps.check-failure-after-soak-tests.outcome == 'failure'
+        if: steps.check-failure-during-soak-tests.outcome == 'failure'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
