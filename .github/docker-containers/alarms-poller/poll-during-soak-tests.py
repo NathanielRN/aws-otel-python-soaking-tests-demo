@@ -51,6 +51,8 @@ if __name__ == "__main__":
 
     did_soak_test_fail_during = False
 
+    time_of_last_alarm_poll = time.time()
+
     while (
         docker_client.containers.get(LOAD_GENERATOR_CONTAINER_NAME).attrs[
             "State"
@@ -59,21 +61,23 @@ if __name__ == "__main__":
     ):
         logger.info("Load Generator container is still running.")
 
-        for alarm in aws_client.describe_alarms(
-            AlarmNamePrefix="OTel Python Soak Tests - "
-        )["MetricAlarms"]:
-            if alarm["StateValue"] == "ALARM":
-                logger.error(
-                    "Triggered alarm %s with reason: %s",
-                    alarm["AlarmName"],
-                    alarm["StateReason"],
+        if time.time() - time_of_last_alarm_poll > args.polling_interval:
+            for alarm in aws_client.describe_alarms(
+                AlarmNamePrefix="OTel Python Soak Tests - "
+            )["MetricAlarms"]:
+                if alarm["StateValue"] == "ALARM":
+                    logger.error(
+                        "Triggered alarm %s with reason: %s",
+                        alarm["AlarmName"],
+                        alarm["StateReason"],
+                    )
+                    did_soak_test_fail_during = True
+                logger.info(
+                    "Alarm %s was %s", alarm["AlarmName"], alarm["StateValue"]
                 )
-                did_soak_test_fail_during = True
-            logger.info(
-                "Alarm %s was %s", alarm["AlarmName"], alarm["StateValue"]
-            )
+            time_of_last_alarm_poll = time.time()
 
-        time.sleep(args.polling_interval)
+        time.sleep(3)
 
     for container_name in [APP_CONTAINER_NAME, COLLECTOR_CONTAINER_NAME]:
         docker_client.containers.get(container_name).stop()

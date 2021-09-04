@@ -1,15 +1,15 @@
 ---
-title: Performance Threshold breached during Soak Tests execution {{ date | date('dddd, MMMM Do') }}
-assignees: NathanielRN
-# labels: bug, enhancement
+title: Performance Threshold breached DURING Soak Tests execution on {{ date | date('dddd, MMMM Do') }}
+# assignees: open-telemetry/opentelemetry-<LANGUAGE>-approvers
+labels: bug, enhancement
 ---
-<!-- During the Soak Tests execution, a performance degradation was revealed for {{ tools.context.ref }} on commit {{ tools.context.sha }}. Check out the Action Logs to view the threshold violation. -->
+# Description
 
-Test: {{ payload.sender.login }}
+During Soak Tests execution, a performance degradation was revealed for commit {{ sha }} of the `{{ ref }}` branch. Check out the Action Logs from the `{{ workflow }}` [workflow run on GitHub]({{ env.GITHUB_SERVER_URL }}/{{ env.GITHUB_REPOSITORY }}/actions/runs/{{ env.GITHUB_RUN_ID }}) to view the threshold violation.
 
-<!-- Also check out:
+# Useful Links
 
-CONTEXT ACTOR - {{ tools.context.actor }}
-CONTEXT EVENT - {{ tools.context.event }}
-CONTEXT PAYLOAD - {{ tools.context.payload }}
-CONTEXT WORKFLOW - {{ tools.context.workflow }} -->
+Snapshots of the Soak Test run are available [on the gh-pages branch](https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/tree/gh-pages/soak-tests/snapshots). These are the snapshots for the violating commit:
+
+![CPU Load Soak Test SnapShot Image](https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/blob/gh-pages/soak-tests/snapshots/{{ sha }}/flask-auto-cpu-load-results.png?raw=true)
+![Total Memory Soak Test SnapShot Image](https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/blob/gh-pages/soak-tests/snapshots/{{ sha }}/flask-auto-total-memory-results.png?raw=true)
