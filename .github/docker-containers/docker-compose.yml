@@ -31,7 +31,7 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
-      - AWS_REGION=us-west-2
+      - AWS_DEFAULT_REGION=us-west-2
       - OTEL_RESOURCE_ATTRIBUTES=service.name=aws-otel-integ-test
       - OTEL_EXPORTER_OTLP_ENDPOINT=grpc://otel:4317
     ports:
@@ -53,7 +53,7 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
-      - AWS_REGION=us-west-2
+      - AWS_DEFAULT_REGION=us-west-2
       - HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
