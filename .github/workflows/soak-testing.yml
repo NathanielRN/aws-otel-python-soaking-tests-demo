@@ -15,10 +15,10 @@ env:
   # - Must also set -> Build and Push Docker image - context:
   # Global Env Vars
   AWS_REGION: us-west-2
-  SOAK_TEST_DURATION_IN_MINUTES: 2
+  SOAK_TEST_DURATION_IN_MINUTES: 300
   # Add this?
   # RATE: TPS
-  HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 30
+  HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
 
 jobs:
   test_apps_and_publish_results:
@@ -93,14 +93,14 @@ jobs:
         run: >-
           declare -a COMMON_API_PARAMETERS=(
           --evaluation-periods 5
-          --datapoints-to-alarm 5
+          --datapoints-to-alarm 3
           --comparison-operator GreaterThanOrEqualToThreshold
-          --treat-missing-data breaching
+          --treat-missing-data ignore
           );
           aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
             --alarm-name 'OTel Python Soak Tests - CPU Load Percentage Spike' \
             --alarm-description 'Triggers when the CPU Load Percentage spikes above the allowed threshold DURING the Soak Test.' \
-            --threshold 69.5 \
+            --threshold 75 \
             --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json) }"
           aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
             --alarm-name 'OTel Python Soak Tests - Virtual Memory Usage Spike' \
