@@ -7,7 +7,8 @@
             "<PROCESS_COMMAND_LINE_DIMENSION_VALUE>",
             {
                 "id": "m2",
-                "label": "Virtual Memory"
+                "label": "Virtual Memory",
+                "color": "#ff7f0e"
             }
         ],
         [
@@ -17,14 +18,24 @@
             ".",
             {
                 "id": "m1",
-                "label": "Physical Memory"
+                "label": "Physical Memory",
+                "color": "#2ca02c"
             }
         ],
         [
             {
                 "expression": "SUM(METRICS())",
                 "label": "Total Memory",
-                "id": "e1"
+                "id": "e1",
+                "color": "#1f77b4"
+            }
+        ],
+        [
+            {
+                "expression": "TIME_SERIES(<TOTAL_MEMORY_THRESHOLD>)",
+                "label": "Total Memory Threshold",
+                "id": "e2",
+                "color": "#d62728"
             }
         ]
     ],

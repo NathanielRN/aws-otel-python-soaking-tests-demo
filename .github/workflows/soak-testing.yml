@@ -16,9 +16,11 @@ env:
   # Global Env Vars
   AWS_REGION: us-west-2
   SOAK_TEST_DURATION_IN_MINUTES: 300
+  HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
+  CPU_LOAD_THRESHOLD: 75
+  TOTAL_MEMORY_THRESHOLD: 1610612736
   # Add this?
   # RATE: TPS
-  HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
 
 jobs:
   test_apps_and_publish_results:
@@ -100,17 +102,17 @@ jobs:
           aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
             --alarm-name 'OTel Python Soak Tests - CPU Load Percentage Spike' \
             --alarm-description 'Triggers when the CPU Load Percentage spikes above the allowed threshold DURING the Soak Test.' \
-            --threshold 75 \
+            --threshold ${{ env.CPU_LOAD_THRESHOLD }} \
             --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json) }"
           aws cloudwatch put-metric-alarm "${COMMON_API_PARAMETERS[@]}" \
             --alarm-name 'OTel Python Soak Tests - Virtual Memory Usage Spike' \
             --alarm-description 'Triggers when the Virtual Memory Usage spikes above the allowed threshold DURING the Soak Test.' \
-            --threshold "$(echo '1.5 * 2^30' | bc)" \
+            --threshold ${{ env.TOTAL_MEMORY_THRESHOLD }} \
             --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json) }"
       - name: Run All Docker Containers - Sample App + OTel Collector + Load Generator + Alarm Poller
         id: check-failure-during-soak-tests
         continue-on-error: true
-        working-directory: .github/docker-containers
+        working-directory: .github/docker-soak-tests
         env:
           APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
           INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
@@ -124,7 +126,7 @@ jobs:
           SOAK_TEST_DURATION_IN_MINUTES: ${{ env.SOAK_TEST_DURATION_IN_MINUTES }}
         run: >-
           docker-compose up;
-          exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-containers_alarms-poller") --format="{{.State.ExitCode}}");
+          exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-soak-tests_alarms-poller") --format="{{.State.ExitCode}}");
       - name: Get a snapshot of metrics
         run: >-
           mkdir -p soak-tests/snapshots/${{ github.sha }};
@@ -134,12 +136,14 @@ jobs:
               cat ./.github/aws-cloudwatch-api-values/get-metric-widget-statistics/$metric_kind-metric-widget.json |
               sed -e "s/<SOAK_TEST_DURATION_IN_MINUTES>/${{ env.SOAK_TEST_DURATION_IN_MINUTES }}/g" \
                   -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
+                  -e "s/<CPU_LOAD_THRESHOLD>/${{ env.CPU_LOAD_THRESHOLD }}/g" \
+                  -e "s/<TOTAL_MEMORY_THRESHOLD>/${{ env.TOTAL_MEMORY_THRESHOLD }}/g" \
                   -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
                   -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
                   -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
             )" |
             jq -r '.MetricWidgetImage' |
-            base64 -d > soak-tests/snapshots/${{ github.sha }}/${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-$metric_kind-results.png;
+            base64 -d > soak-tests/snapshots/${{ github.sha }}/${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-$metric_kind-results-${{ env.GITHUB_RUN_ID }}.png;
           done
       - name: Commit snapshots to repository
         uses: EndBug/add-and-commit@v7

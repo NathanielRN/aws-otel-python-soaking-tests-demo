@@ -15,7 +15,16 @@
             {
                 "expression": "m1/PERIOD(m1)/<NUM_OF_CPUS>*100",
                 "id": "e1",
-                "label": "CPU Load Percentage for <NUM_OF_CPUS> CPUs"
+                "label": "CPU Load Percentage for <NUM_OF_CPUS> CPUs",
+                "color": "#1f77b4"
+            }
+        ],
+        [
+            {
+                "expression": "TIME_SERIES(<CPU_LOAD_THRESHOLD>)",
+                "label": "CPU Threshold",
+                "id": "e2",
+                "color": "#d62728"
             }
         ]
     ],
@@ -33,6 +42,6 @@
     "liveData": false,
     "width": 2043,
     "height": 250,
-    "start": "-PT<MINUTES_TO_RUN>H",
+    "start": "-PT<MINUTES_TO_RUN>M",
     "end": "P0D"
 }

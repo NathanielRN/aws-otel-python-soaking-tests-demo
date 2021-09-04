@@ -10,9 +10,9 @@ logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__file__)
 
-LOAD_GENERATOR_CONTAINER_NAME = "docker-containers_load-generator_1"
-APP_CONTAINER_NAME = "docker-containers_app_1"
-COLLECTOR_CONTAINER_NAME = "docker-containers_otel_1"
+LOAD_GENERATOR_CONTAINER_NAME = "docker-soak-tests_load-generator_1"
+APP_CONTAINER_NAME = "docker-soak-tests_app_1"
+COLLECTOR_CONTAINER_NAME = "docker-soak-tests_otel_1"
 SOAK_TESTS_STARTED_TIMEOUT = 10
 
 
