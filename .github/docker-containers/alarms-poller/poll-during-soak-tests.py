@@ -11,9 +11,9 @@ logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__file__)
 
-LOAD_GENERATOR_CONTAINER_NAME = "app-collector-combo_load-generator_1"
-APP_CONTAINER_NAME = "app-collector-combo_app_1"
-COLLECTOR_CONTAINER_NAME = "app-collector-combo_otel_1"
+LOAD_GENERATOR_CONTAINER_NAME = "docker-containers_load-generator_1"
+APP_CONTAINER_NAME = "docker-containers_app_1"
+COLLECTOR_CONTAINER_NAME = "docker-containers_otel_1"
 SOAK_TESTS_STARTED_TIMEOUT = 10
 
 
@@ -52,9 +52,9 @@ if __name__ == "__main__":
     did_soak_test_fail_during = False
 
     while (
-        docker_client.containers.get(
-            LOAD_GENERATOR_CONTAINER_NAME
-        ).attrs["State"]["Status"]
+        docker_client.containers.get(LOAD_GENERATOR_CONTAINER_NAME).attrs[
+            "State"
+        ]["Status"]
         == "running"
     ):
         logger.info("Load Generator container is still running.")
@@ -83,18 +83,7 @@ if __name__ == "__main__":
 
     if did_soak_test_fail_during:
         logger.error(
-            "Failing because of alarms triggered during Soak Test. Dumping logs: %s",
-            {
-                APP_CONTAINER_NAME: docker_client.containers.get(
-                    APP_CONTAINER_NAME
-                ).logs(),
-                COLLECTOR_CONTAINER_NAME: docker_client.containers.get(
-                    COLLECTOR_CONTAINER_NAME
-                ).logs(),
-                LOAD_GENERATOR_CONTAINER_NAME: docker_client.containers.get(
-                    LOAD_GENERATOR_CONTAINER_NAME
-                ).logs(),
-            },
+            "Failing because of alarms triggered during Soak Test."
         )
         sys.exit(2)
 

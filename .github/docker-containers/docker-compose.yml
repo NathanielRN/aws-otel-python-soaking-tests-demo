@@ -2,7 +2,7 @@ version: "3.7"
 services:
   otel:
     image: otel/opentelemetry-collector-contrib:latest
-    command: --config /config/collector-config.yml --log-level debug
+    command: --config /otel-collector/collector-config.yml --log-level debug
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
@@ -14,7 +14,7 @@ services:
       - PROCESS_COMMAND_LINE
       - PROCESS_EXECUTABLE_NAME
     volumes:
-      - ./config:/config
+      - ./otel-collector:/otel-collector
       - type: bind
         source: /proc
         target: /proc
@@ -46,13 +46,16 @@ services:
       - otel
       - app
 
-  # alarms-poller:
-  #   build:
-  #     context: ./alarms-poller
-  #   environment:
-  #     - HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS
-  #   depends_on:
-  #     - load-generator
+  alarms-poller:
+    build:
+      context: ./alarms-poller
+    environment:
+      - AWS_REGION=us-west-2
+      - HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - load-generator
 
 # # To run on Cloud Desktop:
 # #

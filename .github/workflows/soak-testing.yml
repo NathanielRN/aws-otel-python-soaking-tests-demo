@@ -8,6 +8,7 @@ env:
   # Language Specific
   PROCESS_COMMAND_LINE: /usr/local/bin/python3 application.py
   PROCESS_EXECUTABLE_NAME: python3
+  # Must also set -> Build and Push Docker image - context:
   # Global Env Vars
   AWS_REGION: us-west-2
   SOAK_TEST_DURATION_IN_MINUTES: 1
@@ -102,7 +103,7 @@ jobs:
             --threshold "$(echo '1.5 * 2^30' | bc)" \
             --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json) }"
       - name: Run Sample App & OTel Collector + Load Generator
-        working-directory: .github/app-collector-combo
+        working-directory: .github/docker-containers
         env:
           APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
           INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
@@ -114,13 +115,9 @@ jobs:
           PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
           HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}
           SOAK_TEST_DURATION_IN_MINUTES: ${{ env.SOAK_TEST_DURATION_IN_MINUTES }}
-        run: docker-compose up -d
-      - name: Poll alarms during Soak Test
-        continue-on-error: true
-        id: check-failure-during-soak-tests
         run: >-
-          pip install docker;
-          python3 ./.github/scripts/poll-during-soak-tests.py --polling-interval ${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }};
+          docker-compose up;
+          exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-containers_alarms-poller") --format="{{.State.ExitCode}}");
       - name: Get a snapshot of metrics
         run: >-
           mkdir -p soak-tests/snapshots/${{ github.sha }};
@@ -152,9 +149,9 @@ jobs:
           --end-time $(date -u +%FT%TZ)
           );
           METRIC_DATA_QUERY_INPUT_JSON=$(
-            jq "{ [ inputs ] | add }" \
-            "$(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json)" \
-            "$(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json)"
+            jq '[ inputs ] | add' \
+            ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json \
+            ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json
           );
           aws cloudwatch get-metric-data "${COMMON_API_PARAMETERS[@]}" --cli-input-json "{ \"MetricDataQueries\": $METRIC_DATA_QUERY_INPUT_JSON" |
           jq "{
