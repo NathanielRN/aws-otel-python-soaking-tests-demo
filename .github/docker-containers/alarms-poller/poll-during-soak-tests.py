@@ -1,10 +1,9 @@
 import argparse
-import json
 import logging
-import os
 import sys
 import time
 
+import boto3
 import docker
 
 logging.basicConfig(level=logging.INFO)
@@ -47,6 +46,7 @@ if __name__ == "__main__":
 
     args = parse_args()
 
+    aws_client = boto3.client("cloudwatch")
     docker_client = docker.from_env()
 
     did_soak_test_fail_during = False
@@ -58,13 +58,10 @@ if __name__ == "__main__":
         == "running"
     ):
         logger.info("Load Generator container is still running.")
-        alarms_info = json.loads(
-            os.popen(
-                "aws cloudwatch describe-alarms --alarm-name-prefix 'OTel Python Soak Tests - '"
-            ).read()
-        )
 
-        for alarm in alarms_info["MetricAlarms"]:
+        for alarm in aws_client.describe_alarms(
+            AlarmNamePrefix="OTel Python Soak Tests - "
+        )["MetricAlarms"]:
             if alarm["StateValue"] == "ALARM":
                 logger.error(
                     "Triggered alarm %s with reason: %s",
@@ -82,9 +79,7 @@ if __name__ == "__main__":
         docker_client.containers.get(container_name).stop()
 
     if did_soak_test_fail_during:
-        logger.error(
-            "Failing because of alarms triggered during Soak Test."
-        )
+        logger.error("Failing because of alarms triggered during Soak Test.")
         sys.exit(2)
 
     logger.info("Done polling Soak Test alarms.")

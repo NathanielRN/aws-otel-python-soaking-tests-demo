@@ -102,7 +102,7 @@ jobs:
             --alarm-description 'Triggers when the Virtual Memory Usage spikes above the allowed threshold DURING the Soak Test.' \
             --threshold "$(echo '1.5 * 2^30' | bc)" \
             --cli-input-json "{ \"Metrics\": $(cat ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json) }"
-      - name: Run Sample App & OTel Collector + Load Generator
+      - name: Run All Docker Containers - Sample App + OTel Collector + Load Generator + Alarm Poller
         working-directory: .github/docker-containers
         env:
           APP_IMAGE: ${{ steps.docker-image-metadata.outputs.tags }}
