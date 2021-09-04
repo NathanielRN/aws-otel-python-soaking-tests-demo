@@ -5,9 +5,9 @@
 name: Soak Testing
 on:
   schedule:
-    - cron: '0 */6 * * *' # every day at 10 am UTC: pst 2am
-  push:
-    branches: [ main ]
+    - cron: '0 */6 * * *' # Every 6 hours (Later we can try 'every day at 10 am UTC: pst 2am')
+  # push:
+  #   branches: [ main ]
 env:
   # Language Specific
   PROCESS_COMMAND_LINE: /usr/local/bin/python3 application.py

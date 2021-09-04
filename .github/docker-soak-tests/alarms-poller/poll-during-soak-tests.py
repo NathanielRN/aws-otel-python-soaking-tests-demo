@@ -53,15 +53,15 @@ if __name__ == "__main__":
 
     time_of_last_alarm_poll = time.time()
 
+    logger.info("Begin polling alarms. Continue until Load Generator no longer running.")
     while (
         docker_client.containers.get(LOAD_GENERATOR_CONTAINER_NAME).attrs[
             "State"
         ]["Status"]
         == "running"
     ):
-        logger.info("Load Generator container is still running.")
-
         if time.time() - time_of_last_alarm_poll > args.polling_interval:
+            logger.info("Polling alarms now.")
             for alarm in aws_client.describe_alarms(
                 AlarmNamePrefix="OTel Python Soak Tests - "
             )["MetricAlarms"]:
