@@ -128,6 +128,8 @@ jobs:
           docker-compose up;
           exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-soak-tests_alarms-poller") --format="{{.State.ExitCode}}");
       - name: Get a snapshot of metrics
+        env:
+          GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
         run: >-
           mkdir -p soak-tests/snapshots/${{ github.sha }};
           for metric_kind in cpu-load total-memory;
