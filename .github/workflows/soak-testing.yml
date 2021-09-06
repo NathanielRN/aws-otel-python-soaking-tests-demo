@@ -128,8 +128,6 @@ jobs:
           docker-compose up;
           exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-soak-tests_alarms-poller") --format="{{.State.ExitCode}}");
       - name: Get a snapshot of metrics
-        env:
-          GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
         run: >-
           mkdir -p soak-tests/snapshots/${{ github.sha }};
           for metric_kind in cpu-load total-memory;
@@ -145,7 +143,7 @@ jobs:
                   -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
             )" |
             jq -r '.MetricWidgetImage' |
-            base64 -d > soak-tests/snapshots/${{ github.sha }}/${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-$metric_kind-results-${{ env.GITHUB_RUN_ID }}.png;
+            base64 -d > soak-tests/snapshots/${{ github.sha }}/${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-$metric_kind-results-$GITHUB_RUN_ID.png;
           done
       - name: Commit snapshots to repository
         uses: EndBug/add-and-commit@v7
@@ -241,11 +239,11 @@ jobs:
         with:
           filename: .github/issue-templates/FAILURE-AFTER-SOAK_TESTS.md
           update_existing: true
+      - name: Delete Soak Test alarms
+        run: >-
+          aws cloudwatch delete-alarms --alarm-names 'OTel Python Soak Tests - CPU Load Percentage Spike' 'OTel Python Soak Tests - Virtual Memory Usage Spike'
       - name: Check for Performance Degradation either DURING or AFTER Soak Tests
         if: steps.check-failure-after-soak-tests.outcome == 'failure' || steps.check-failure-after-soak-tests.outcome == 'failure'
         run: >-
           echo 'Soak Tests failed, see the logs above for details';
           exit 1;
-      - name: Delete Soak Test alarms
-        run: >-
-          aws cloudwatch delete-alarms --alarm-names 'OTel Python Soak Tests - CPU Load Percentage Spike' 'OTel Python Soak Tests - Virtual Memory Usage Spike'
