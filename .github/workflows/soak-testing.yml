@@ -6,7 +6,7 @@
 name: Soak Testing
 on:
   schedule:
-    - cron: '*/1 * * * *' # Every 6 hours
+    - cron: '0 */6 * * *' # Every 6 hours
   # push:
   #   branches: [ main ]
 env:
@@ -214,7 +214,7 @@ jobs:
           update_existing: true
       - name: Publish Issue if failed AFTER Soak Tests
         uses: JasonEtco/create-an-issue@v2
-        # if: steps.check-failure-after-soak-tests.outcome == 'failure'
+        if: steps.check-failure-after-soak-tests.outcome == 'failure'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_SERVER_URL: ${{ env.GITHUB_SERVER_URL }}
