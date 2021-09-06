@@ -1,11 +1,12 @@
 # Pre-requisites:
 # - AWS Account with correct permissions
 # - `gh-pages` branch
+# - LOGS_NAMESPACE + LOGS_GROUP
 
 name: Soak Testing
 on:
   # schedule:
-  #   - cron: '0 */6 * * *' # Every 6 hours (Later we can try 'every day at 10 am UTC: pst 2am')
+  #   - cron: '0 */6 * * *' # Every 6 hours
   push:
     branches: [ main ]
 env:
@@ -38,6 +39,7 @@ jobs:
         instrumentation-type: [ auto ]
     env:
       IMAGE_SUFFIX: sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-${{ github.sha }}
+      LOGS_NAMESPACE: $(echo ${{ github.repository }}/soak-tests-$GITHUB_RUN_ID
     steps:
       - uses: actions/checkout@v2
       - name: Log in to the GitHub Container Registry
@@ -87,7 +89,7 @@ jobs:
               cat ./.github/aws-cloudwatch-api-values/get-metric-data/$metric_kind-metric-data-query.json |
               sed -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
                   -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
-                  -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
+                  -e "s/<LOGS_NAMESPACE>/${{ env.LOGS_NAMESPACE }} | sed 's/\//\\\//g')/g" \
                   -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
             )" > ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-$metric_kind-metric-data-query.json;
           done
@@ -118,7 +120,7 @@ jobs:
           INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
           LISTEN_ADDRESS: 0.0.0.0:8080
           LOG_GROUP_NAME: ${{ github.repository }}/soak-tests
-          LOGS_NAMESPACE: ${{ github.repository }}/soak-tests
+          LOGS_NAMESPACE: ${{ env.LOGS_NAMESPACE }}
           LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
           PROCESS_COMMAND_LINE: ${{ env.PROCESS_COMMAND_LINE }}
           PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
@@ -139,7 +141,7 @@ jobs:
                   -e "s/<CPU_LOAD_THRESHOLD>/${{ env.CPU_LOAD_THRESHOLD }}/g" \
                   -e "s/<TOTAL_MEMORY_THRESHOLD>/${{ env.TOTAL_MEMORY_THRESHOLD }}/g" \
                   -e "s/<NUM_OF_CPUS>/${{ steps.get-num-of-cpus-step.outputs.NUM_OF_CPUS }}/g" \
-                  -e "s/<LOGS_NAMESPACE>/$(echo ${{ github.repository }}/soak-tests | sed 's/\//\\\//g')/g" \
+                  -e "s/<LOGS_NAMESPACE>/${{ env.LOGS_NAMESPACE }} | sed 's/\//\\\//g')/g" \
                   -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
             )" |
             jq -r '.MetricWidgetImage' |
@@ -160,7 +162,7 @@ jobs:
           --end-time $(date -u +%FT%TZ)
           );
           METRIC_DATA_QUERY_INPUT_JSON=$(
-            jq '[ inputs ] | add' \
+            jq -n '[ inputs ] | add' \
             ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-cpu-load-metric-data-query.json \
             ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-total-memory-metric-data-query.json
           );
@@ -210,7 +212,7 @@ jobs:
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           max-items-in-chart: 100
-          alert-threshold: 1%
+          alert-threshold: 175%
           # Does not work as expected, see: https://github.com/open-telemetry/opentelemetry-python/pull/1478
           # comment-always: true
           fail-on-alert: true
