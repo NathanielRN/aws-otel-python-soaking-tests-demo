@@ -6,7 +6,7 @@
 name: Soak Testing
 on:
   schedule:
-    - cron: '15 18 * * *' # DEBUGGING: Every 6 hours
+    - cron: '*/5 * * * *' # DEBUGGING: Every 6 hours
   # push:
   #   branches: [ main ]
 env:
