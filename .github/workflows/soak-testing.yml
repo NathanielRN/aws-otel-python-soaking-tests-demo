@@ -6,7 +6,7 @@
 name: Soak Testing
 on:
   schedule:
-    - cron: '0 */6 * * *' # DEBUGGING: Every 6 hours
+    - cron: '15 18 * * *' # DEBUGGING: Every 6 hours
   # push:
   #   branches: [ main ]
 env:
@@ -66,11 +66,11 @@ jobs:
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
           images: ghcr.io/${{ github.repository }}-${{ env.IMAGE_SUFFIX }}
-        tags: |
-          type=schedule
-          type=ref,event=branch
-          type=ref,event=tag
-          type=ref,event=pr
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
       # TODO: Could we just build in `docker-compose` build/context without publishing?
       - name: Build and Push Docker image
         uses: docker/build-push-action@v2
