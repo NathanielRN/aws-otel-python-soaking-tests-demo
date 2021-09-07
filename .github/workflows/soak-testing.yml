@@ -6,7 +6,7 @@
 name: Soak Testing
 on:
   schedule:
-    - cron: '0 */6 * * *' # Every 6 hours
+    - cron: '0 */6 * * *' # DEBUGGING: Every 6 hours
   # push:
   #   branches: [ main ]
 env:
@@ -18,7 +18,7 @@ env:
   AWS_REGION: us-west-2
   SOAK_TEST_DURATION_IN_MINUTES: 300
   HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS: 600
-  CPU_LOAD_THRESHOLD: 75
+  CPU_LOAD_THRESHOLD: 7 #75
   TOTAL_MEMORY_THRESHOLD: 1610612736
   # Add this?
   # RATE: TPS
@@ -194,7 +194,7 @@ jobs:
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           max-items-in-chart: 100
-          alert-threshold: 175%
+          alert-threshold: 1% # 175%
           # Does not work as expected, see: https://github.com/open-telemetry/opentelemetry-python/pull/1478
           # comment-always: true
           fail-on-alert: true
@@ -211,7 +211,6 @@ jobs:
           GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
         with:
           filename: .github/issue-templates/FAILURE-DURING-SOAK_TESTS.md
-          update_existing: true
       - name: Publish Issue if failed AFTER Soak Tests
         uses: JasonEtco/create-an-issue@v2
         if: steps.check-failure-after-soak-tests.outcome == 'failure'
@@ -222,7 +221,6 @@ jobs:
           GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
         with:
           filename: .github/issue-templates/FAILURE-AFTER-SOAK_TESTS.md
-          update_existing: true
       - name: Delete Soak Test alarms
         run: >-
           aws cloudwatch delete-alarms --alarm-names 'OTel Python Soak Tests - CPU Load Percentage Spike' 'OTel Python Soak Tests - Virtual Memory Usage Spike'
