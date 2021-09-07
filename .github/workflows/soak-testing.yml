@@ -6,7 +6,7 @@
 name: Soak Testing
 on:
   schedule:
-    - cron: '*/5 * * * *' # DEBUGGING: Every 6 hours
+    - cron: '0 */6 * * *' # DEBUGGING: Every 6 hours
   # push:
   #   branches: [ main ]
 env:
@@ -123,7 +123,7 @@ jobs:
         continue-on-error: true
         working-directory: .github/docker-soak-tests
         env:
-          APP_IMAGE: ghcr.io/${{ github.repository }}-${{ env.IMAGE_SUFFIX }}:main
+          APP_IMAGE: ${{ fromJSON(steps.docker-image-metadata.outputs.json).tags[0] }}
           INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
           LISTEN_ADDRESS: 0.0.0.0:8080
           LOG_GROUP_NAME: ${{ github.repository }}/soak-tests
