@@ -1,7 +1,7 @@
 # Pre-requisites:
 # - AWS Account with correct permissions
 # - `gh-pages` branch
-# - LOGS_NAMESPACE + LOGS_GROUP
+# - LOGS_NAMESPACE? + LOGS_GROUP
 
 name: Soak Testing
 on:
@@ -90,7 +90,7 @@ jobs:
               cat ./.github/aws-cloudwatch-api-values/get-metric-data/$metric_kind-metric-data-query.json |
               sed -e "s/<METRIC_PERIOD>/${{ env.HOSTMETRICS_COLLECTION_INTERVAL_IN_SECONDS }}/g" \
                   -e "s/<NUM_OF_CPUS>/$NUM_OF_CPUS/g" \
-                  -e "s/<LOGS_NAMESPACE>/${{ env.LOGS_NAMESPACE }} | sed 's/\//\\\//g')/g" \
+                  -e "s/<LOGS_NAMESPACE>/$(echo ${{ env.LOGS_NAMESPACE }} | sed 's/\//\\\//g')/g" \
                   -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
             )" |
             tee ./.github/aws-cloudwatch-api-values/get-metric-data/prepared-$metric_kind-metric-data-query.json;
@@ -143,7 +143,7 @@ jobs:
                   -e "s/<CPU_LOAD_THRESHOLD>/${{ env.CPU_LOAD_THRESHOLD }}/g" \
                   -e "s/<TOTAL_MEMORY_THRESHOLD>/${{ env.TOTAL_MEMORY_THRESHOLD }}/g" \
                   -e "s/<NUM_OF_CPUS>/$NUM_OF_CPUS/g" \
-                  -e "s/<LOGS_NAMESPACE>/${{ env.LOGS_NAMESPACE }} | sed 's/\//\\\//g')/g" \
+                  -e "s/<LOGS_NAMESPACE>/$(echo ${{ env.LOGS_NAMESPACE }} | sed 's/\//\\\//g')/g" \
                   -e "s/<PROCESS_COMMAND_LINE_DIMENSION_VALUE>/$(echo ${{ env.PROCESS_COMMAND_LINE }} | sed 's/\//\\\//g')/g"
             )" |
             jq -r '.MetricWidgetImage' |
