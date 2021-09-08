@@ -117,6 +117,8 @@ jobs:
         run: >-
           docker-compose up;
           exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-performance-tests_alarms-poller") --format="{{.State.ExitCode}}");
+      - name: Install script dependencies
+        run: pip install boto3
       - name: Get a snapshot of metrics
         run: python3 .github/scripts/performance-tests/produce-performance-test-results.py
           --metrics-period ${{ env.HOSTMETRICS_INTERVAL_SECS }}

@@ -1,8 +1,3 @@
-import subprocess
-import sys
-
-subprocess.check_call([sys.executable, "-m", "pip", "install", "boto3"])
-
 import argparse
 import logging
 from statistics import mean
