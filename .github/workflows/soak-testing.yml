@@ -96,28 +96,28 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 21600 # 6 Hours
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
-      - name: Run All Docker Containers - Sample App + OTel Collector + Load Generator + Alarm Poller
-        id: check-failure-during-performance-tests
-        continue-on-error: true
-        working-directory: .github/docker-performance-tests
-        env:
-          APP_IMAGE: ${{ fromJSON(steps.docker-image-metadata.outputs.json).tags[0] }}
-          INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
-          LISTEN_ADDRESS: 0.0.0.0:8080
-          LOG_GROUP_NAME: otel-sdk-performance-tests
-          LOGS_NAMESPACE: ${{ env.LOGS_NAMESPACE }}
-          LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
-          PROCESS_COMMAND_LINE_DIMENSION_VALUE: ${{ env.PROCESS_COMMAND_LINE_DIMENSION_VALUE }}
-          PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
-          HOSTMETRICS_INTERVAL_SECS: ${{ env.HOSTMETRICS_INTERVAL_SECS }}
-          TEST_DURATION_MINUTES: ${{ env.TEST_DURATION_MINUTES }}
-          NUM_OF_CPUS: ${{ env.NUM_OF_CPUS }}
-          CPU_LOAD_THRESHOLD: ${{ env.CPU_LOAD_THRESHOLD }}
-          TOTAL_MEMORY_THRESHOLD: ${{ env.TOTAL_MEMORY_THRESHOLD }}
-          AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
-        run: >-
-          docker-compose up;
-          exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-performance-tests_alarms-poller") --format="{{.State.ExitCode}}");
+      # - name: Run All Docker Containers - Sample App + OTel Collector + Load Generator + Alarm Poller
+      #   id: check-failure-during-performance-tests
+      #   continue-on-error: true
+      #   working-directory: .github/docker-performance-tests
+      #   env:
+      #     APP_IMAGE: ${{ fromJSON(steps.docker-image-metadata.outputs.json).tags[0] }}
+      #     INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
+      #     LISTEN_ADDRESS: 0.0.0.0:8080
+      #     LOG_GROUP_NAME: otel-sdk-performance-tests
+      #     LOGS_NAMESPACE: ${{ env.LOGS_NAMESPACE }}
+      #     LOG_STREAM_NAME: ${{ env.IMAGE_SUFFIX }}
+      #     PROCESS_COMMAND_LINE_DIMENSION_VALUE: ${{ env.PROCESS_COMMAND_LINE_DIMENSION_VALUE }}
+      #     PROCESS_EXECUTABLE_NAME: ${{ env.PROCESS_EXECUTABLE_NAME }}
+      #     HOSTMETRICS_INTERVAL_SECS: ${{ env.HOSTMETRICS_INTERVAL_SECS }}
+      #     TEST_DURATION_MINUTES: ${{ env.TEST_DURATION_MINUTES }}
+      #     NUM_OF_CPUS: ${{ env.NUM_OF_CPUS }}
+      #     CPU_LOAD_THRESHOLD: ${{ env.CPU_LOAD_THRESHOLD }}
+      #     TOTAL_MEMORY_THRESHOLD: ${{ env.TOTAL_MEMORY_THRESHOLD }}
+      #     AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
+      #   run: >-
+      #     docker-compose up;
+      #     exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-performance-tests_alarms-poller") --format="{{.State.ExitCode}}");
       - name: Install script dependencies
         run: pip install boto3
       - name: Get a snapshot of metrics
@@ -135,6 +135,8 @@ jobs:
           --instrumentation-type ${{ matrix.instrumentation-type }}
       - name: Commit snapshots to repository
         run: >-
+          git checkout main;
+          git pull;
           git checkout gh-pages;
           git pull;
           git add soak-tests/snapshots;
