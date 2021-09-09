@@ -181,7 +181,9 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    start_time = (datetime.utcnow() - timedelta(minutes=args.test_duration_minutes)).strftime("%FT%TZ")
+    start_time = (
+        datetime.utcnow() - timedelta(minutes=args.test_duration_minutes)
+    ).strftime("%FT%TZ")
 
     metric_widget_images = [
         (
@@ -220,7 +222,7 @@ if __name__ == "__main__":
                 "stacked": False,
                 "stat": METRIC_DATA_STATISTIC,
                 "period": args.metrics_period,
-                "title": f"Process CPU Load Percentage for {args.num_of_cpus} CPUs",
+                "title": f"Process CPU Load Percentage with {args.num_of_cpus} CPUs for ({args.app_platform}, {args.instrumentation_type}) Sample App",
                 "yAxis": {"left": {"label": "Percentage", "showUnits": False}},
                 "liveData": False,
                 "width": 2043,
@@ -276,7 +278,7 @@ if __name__ == "__main__":
                 "stacked": False,
                 "stat": METRIC_DATA_STATISTIC,
                 "period": args.metrics_period,
-                "title": "Process Memory Usage",
+                "title": f"Process Memory Usage for ({args.app_platform}, {args.instrumentation_type}) Sample App",
                 "yAxis": {"left": {"showUnits": True}},
                 "liveData": False,
                 "width": 2043,
@@ -286,8 +288,10 @@ if __name__ == "__main__":
             },
         ),
     ]
-    
-    Path(f"soak-tests/snapshots/{ args.github_sha }").mkdir(parents=True, exist_ok=True)
+
+    Path(f"soak-tests/snapshots/{ args.github_sha }").mkdir(
+        parents=True, exist_ok=True
+    )
 
     aws_client = boto3.client("cloudwatch")
 
