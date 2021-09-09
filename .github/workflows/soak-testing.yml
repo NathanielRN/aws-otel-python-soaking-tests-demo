@@ -5,8 +5,10 @@
 
 name: Soak Testing
 on:
-  schedule:
-    - cron: '0 */24 * * *'
+  # schedule:
+  #   - cron: '0 */24 * * *'
+  push:
+    branches: [ main ]
 env:
   # Language Specific
   PROCESS_COMMAND_LINE_DIMENSION_VALUE: /usr/local/bin/python3 application.py
@@ -17,7 +19,7 @@ env:
 
   # Additional Env Vars
   AWS_DEFAULT_REGION: us-east-1
-  TEST_DURATION_MINUTES: 300
+  TEST_DURATION_MINUTES: 30
   HOSTMETRICS_INTERVAL_SECS: 600
   CPU_LOAD_THRESHOLD: 7 #75
   TOTAL_MEMORY_THRESHOLD: 1610612736
