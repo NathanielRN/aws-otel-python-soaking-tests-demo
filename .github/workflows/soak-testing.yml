@@ -5,21 +5,19 @@
 
 name: Soak Testing
 on:
-  # schedule:
-  #   - cron: '0 */6 * * *' # DEBUGGING: Every 6 hours
-  push:
-    branches: [ main ]
+  schedule:
+    - cron: '0 */24 * * *'
 env:
   # Language Specific
   PROCESS_COMMAND_LINE_DIMENSION_VALUE: /usr/local/bin/python3 application.py
   PROCESS_EXECUTABLE_NAME: python3
   # - Every language must also set the path for the sample-app in the `Build and Push Docker image` step.
-  #   For example, Python is uses this path for it's sample-app context:
+  #   For example, Python is using this path for it's sample-app context:
   #   `context: integration-test-apps/${{ matrix.instrumentation-type}}-instrumentation/${{ matrix.app-platform }}`
 
   # Additional Env Vars
-  AWS_DEFAULT_REGION: us-west-2
-  TEST_DURATION_MINUTES: 20 #300
+  AWS_DEFAULT_REGION: us-east-1
+  TEST_DURATION_MINUTES: 300
   HOSTMETRICS_INTERVAL_SECS: 600
   CPU_LOAD_THRESHOLD: 7 #75
   TOTAL_MEMORY_THRESHOLD: 1610612736
@@ -40,8 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         app-platform: [ flask ]
-        # instrumentation-type: [ auto, manual ]
-        instrumentation-type: [ auto ]
+        instrumentation-type: [ auto, manual ]
     env:
       IMAGE_SUFFIX: sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-${{ github.sha }}
       # TODO: Does the LOGS_NAMESPACE need a `-$GITHUB_RUN_ID`? (Only if we run multiple Soak Tests at a time,
@@ -94,6 +91,8 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          role-duration-seconds: 21600 # 6 Hours
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - name: Run All Docker Containers - Sample App + OTel Collector + Load Generator + Alarm Poller
         id: check-failure-during-performance-tests
@@ -120,18 +119,18 @@ jobs:
       - name: Install script dependencies
         run: pip install boto3
       - name: Get a snapshot of metrics
-        run: python3 .github/scripts/performance-tests/produce-performance-test-results.py
+        run: python3 .github/scripts/performance-tests/produce-metric-widget-images.py
+          --cpu-load-threshold ${{ env.CPU_LOAD_THRESHOLD }}
+          --logs-namespace ${{ env.LOGS_NAMESPACE }}
           --metrics-period ${{ env.HOSTMETRICS_INTERVAL_SECS }}
           --num-of-cpus ${{ env.NUM_OF_CPUS }}
-          --logs-namespace ${{ env.LOGS_NAMESPACE }}
           --process-command-line-dimension-value "${{ env.PROCESS_COMMAND_LINE_DIMENSION_VALUE }}"
-          --cpu-load-threshold ${{ env.CPU_LOAD_THRESHOLD }}
-          --total-memory-threshold ${{ env.TOTAL_MEMORY_THRESHOLD }}
           --test-duration-minutes ${{ env.TEST_DURATION_MINUTES }}
-          --github-sha ${{ github.sha }}
+          --total-memory-threshold ${{ env.TOTAL_MEMORY_THRESHOLD }}
           --app-platform ${{ matrix.app-platform }}
-          --instrumentation-type ${{ matrix.instrumentation-type }}
+          --github-sha ${{ github.sha }}
           --github-run-id ${{ env.GITHUB_RUN_ID }}
+          --instrumentation-type ${{ matrix.instrumentation-type }}
       - name: Commit snapshots to repository
         run: >-
           git checkout gh-pages;
@@ -143,11 +142,12 @@ jobs:
         run: git checkout main
       - name: Prepare Performance Test results as JSON output
         run: python3 .github/scripts/performance-tests/produce-performance-test-results.py
+          --cpu-load-threshold ${{ env.CPU_LOAD_THRESHOLD }}
+          --logs-namespace ${{ env.LOGS_NAMESPACE }}
           --metrics-period ${{ env.HOSTMETRICS_INTERVAL_SECS }}
           --num-of-cpus ${{ env.NUM_OF_CPUS }}
-          --logs-namespace ${{ env.LOGS_NAMESPACE }}
           --process-command-line-dimension-value "${{ env.PROCESS_COMMAND_LINE_DIMENSION_VALUE }}"
-          --cpu-load-threshold ${{ env.CPU_LOAD_THRESHOLD }}
+          --test-duration-minutes ${{ env.TEST_DURATION_MINUTES }}
           --total-memory-threshold ${{ env.TOTAL_MEMORY_THRESHOLD }}
       - name: Report on Performance Test Averages results
         uses: NathanielRN/github-action-benchmark@v1.8.2-alpha3
@@ -159,7 +159,7 @@ jobs:
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           max-items-in-chart: 100
-          alert-threshold: 1% # 175%
+          alert-threshold: 1% #175%
           # Does not work as expected, see: https://github.com/open-telemetry/opentelemetry-python/pull/1478
           # comment-always: true
           fail-on-alert: true

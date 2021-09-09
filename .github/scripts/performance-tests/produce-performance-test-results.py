@@ -1,7 +1,8 @@
 import argparse
+import json
 import logging
-from statistics import mean
 from datetime import datetime, timedelta
+from statistics import mean
 
 import boto3
 
@@ -21,6 +22,32 @@ def parse_args():
         produce-performance-test-results.py produces overall results for the
         performance tests that were just run as JSON output.
         """
+    )
+
+    parser.add_argument(
+        "--cpu-load-threshold",
+        required=True,
+        type=int,
+        help="""
+        The threshold the CPU Load (as a percentage) must stay under to not
+        trigger the alarm.
+
+        Examples:
+
+            --cpu-load-threshold=75
+        """,
+    )
+
+    parser.add_argument(
+        "--logs-namespace",
+        required=True,
+        help="""
+        The namespace of the logs that the alarm should poll.
+
+        Examples:
+
+            --logs-namespace=aws-observability/aws-otel-python/soak-tests
+        """,
     )
 
     parser.add_argument(
@@ -52,18 +79,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--logs-namespace",
-        required=True,
-        help="""
-        The namespace of the logs that the alarm should poll.
-
-        Examples:
-
-            --logs-namespace=aws-observability/aws-otel-python/soak-tests
-        """,
-    )
-
-    parser.add_argument(
         "--process-command-line-dimension-value",
         required=True,
         help="""
@@ -78,15 +93,43 @@ def parse_args():
         """,
     )
 
+    parser.add_argument(
+        "--test-duration-minutes",
+        required=True,
+        type=int,
+        help="""
+        The duration of the performance test, which is used to determine the
+        start of metrics to include in the snapshots.
+
+        Examples:
+
+            --test-duration-minutes=$(echo 1.5 \* 2^30 | bc)
+        """,
+    )
+
+    parser.add_argument(
+        "--total-memory-threshold",
+        required=True,
+        type=int,
+        help="""
+        The threshold the Total Memory (in bytes) must stay under to not trigger
+        the alarm.
+
+        Examples:
+
+            --total-memory-threshold=$(echo 1.5 \* 2^30 | bc)
+        """,
+    )
+
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     logger.debug("Starting script to get performance test results.")
 
-    start_time = (datetime.utcnow() - timedelta(hours=1)).strftime("%FT%TZ")
-
     args = parse_args()
+
+    start_time = (datetime.utcnow() - timedelta(minutes=args.test_duration_minutes)).strftime("%FT%TZ")
 
     cpu_load_metric_data_queries = [
         {
@@ -146,7 +189,7 @@ if __name__ == "__main__":
                     "Dimensions": [
                         {
                             "Name": "process.command_line",
-                            "Value": args.process_command_line_dimensions_value,
+                            "Value": args.process_command_line_dimension_value,
                         }
                     ],
                 },
@@ -174,7 +217,7 @@ if __name__ == "__main__":
         + total_memory_metric_data_queries,
     )["MetricDataResults"]
 
-    benchmarks_json = {
+    benchmarks_json = json.dumps({
         "benchmarks": [
             {
                 "Name": "Soak Test Average CPU Load",
@@ -203,11 +246,11 @@ if __name__ == "__main__":
                 "Unit": "Megabytes",
             },
         ]
-    }
+    }, indent=4)
 
-    logger.info("Found these benchmarks: ", benchmarks_json)
+    logger.info("Found these benchmarks: %s", benchmarks_json)
 
     with open("output.json", "w") as file_context:
         file_context.write(benchmarks_json)
 
-    logger.info("Done polling Performance Test alarms.")
+    logger.info("Done producing Performance Test results.")

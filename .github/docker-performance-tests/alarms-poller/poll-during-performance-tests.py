@@ -12,8 +12,8 @@ logger = logging.getLogger(__file__)
 
 # AWS Client API Constants
 
-PROCESS_COMMAND_LINE_DIMENSION_NAME="process.command_line"
-METRIC_DATA_STATISTIC="Sum"
+PROCESS_COMMAND_LINE_DIMENSION_NAME = "process.command_line"
+METRIC_DATA_STATISTIC = "Sum"
 
 COMMON_ALARM_API_PARAMETERS = {
     "EvaluationPeriods": 5,
@@ -22,14 +22,17 @@ COMMON_ALARM_API_PARAMETERS = {
     "TreatMissingData": "ignore",
 }
 
-CPU_LOAD_ALARM_NAME = "OTel Python Performance Test - CPU Load Percentage Spike"
-TOTAL_MEMORY_ALARM_NAME = "OTel Python Performance Test - Virtual Memory Usage Spike"
+CPU_LOAD_ALARM_NAME = "OTel Performance Test - CPU Load Percentage Spike - Python"
+TOTAL_MEMORY_ALARM_NAME = (
+    "OTel Performance Test - Virtual Memory Usage Spike - Python"
+)
 
 # Docker Client API Constants
 
 LOAD_GENERATOR_CONTAINER_NAME = "docker-performance-tests_load-generator_1"
 APP_CONTAINER_NAME = "docker-performance-tests_app_1"
 COLLECTOR_CONTAINER_NAME = "docker-performance-tests_otel_1"
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -214,7 +217,7 @@ if __name__ == "__main__":
     aws_client.put_metric_alarm(
         **{
             **COMMON_ALARM_API_PARAMETERS,
-            "AlarmName": "OTel Python Performance Test - CPU Load Percentage Spike",
+            "AlarmName": CPU_LOAD_ALARM_NAME,
             "AlarmDescription": "Triggers when the CPU Load Percentage spikes above the allowed threshold DURING the Performance Test.",
             "Threshold": args.cpu_load_threshold,
             "Metrics": cpu_load_metric_data_queries,
@@ -224,7 +227,7 @@ if __name__ == "__main__":
     aws_client.put_metric_alarm(
         **{
             **COMMON_ALARM_API_PARAMETERS,
-            "AlarmName": "OTel Python Performance Test - Virtual Memory Usage Spike",
+            "AlarmName": TOTAL_MEMORY_ALARM_NAME,
             "AlarmDescription": "Triggers when the Virtual Memory Usage spikes above the allowed threshold DURING the Performance Test.",
             "Threshold": args.total_memory_threshold,
             "Metrics": total_memory_metric_data_queries,
@@ -238,7 +241,7 @@ if __name__ == "__main__":
     time_of_last_alarm_poll = time.time()
 
     logger.info(
-        "Begin polling alarms. Continue until Load Generator no longer running."
+        "Begin polling alarms. Continue until Load Generator completes."
     )
     while (
         docker_client.containers.get(LOAD_GENERATOR_CONTAINER_NAME).attrs[
@@ -249,7 +252,7 @@ if __name__ == "__main__":
         if time.time() - time_of_last_alarm_poll > args.metrics_period:
             logger.info("Polling alarms now.")
             for alarm in aws_client.describe_alarms(
-                AlarmNamePrefix="OTel Python Performance Tests - "
+                AlarmNames=[CPU_LOAD_ALARM_NAME, TOTAL_MEMORY_ALARM_NAME]
             )["MetricAlarms"]:
                 if alarm["StateValue"] == "ALARM":
                     logger.error(
@@ -271,10 +274,7 @@ if __name__ == "__main__":
     # Delete Alarms
 
     aws_client.delete_alarms(
-        AlarmNames=[
-            CPU_LOAD_ALARM_NAME,
-            TOTAL_MEMORY_ALARM_NAME
-        ]
+        AlarmNames=[CPU_LOAD_ALARM_NAME, TOTAL_MEMORY_ALARM_NAME]
     )
 
     # End the Polling

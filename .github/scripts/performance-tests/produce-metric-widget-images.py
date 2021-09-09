@@ -1,6 +1,6 @@
 import argparse
+import json
 import logging
-import base64
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -22,6 +22,32 @@ def parse_args():
         produce-performance-test-results.py produces overall results for the
         performance tests that were just run as JSON output.
         """
+    )
+
+    parser.add_argument(
+        "--cpu-load-threshold",
+        required=True,
+        type=int,
+        help="""
+        The threshold the CPU Load (as a percentage) must stay under to not
+        trigger the alarm.
+
+        Examples:
+
+            --cpu-load-threshold=75
+        """,
+    )
+
+    parser.add_argument(
+        "--logs-namespace",
+        required=True,
+        help="""
+        The namespace of the logs that the alarm should poll.
+
+        Examples:
+
+            --logs-namespace=aws-observability/aws-otel-python/soak-tests
+        """,
     )
 
     parser.add_argument(
@@ -53,18 +79,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--logs-namespace",
-        required=True,
-        help="""
-        The namespace of the logs that the alarm should poll.
-
-        Examples:
-
-            --logs-namespace=aws-observability/aws-otel-python/soak-tests
-        """,
-    )
-
-    parser.add_argument(
         "--process-command-line-dimension-value",
         required=True,
         help="""
@@ -76,34 +90,6 @@ def parse_args():
         Examples:
 
             --process-command-line-dimension-value='/usr/local/bin/python3 application.py'
-        """,
-    )
-
-    parser.add_argument(
-        "--cpu-load-threshold",
-        required=True,
-        type=int,
-        help="""
-        The threshold the CPU Load (as a percentage) must stay under to not
-        trigger the alarm.
-
-        Examples:
-
-            --cpu-load-threshold=75
-        """,
-    )
-
-    parser.add_argument(
-        "--total-memory-threshold",
-        required=True,
-        type=int,
-        help="""
-        The threshold the Total Memory (in bytes) must stay under to not trigger
-        the alarm.
-
-        Examples:
-
-            --total-memory-threshold=$(echo 1.5 \* 2^30 | bc)
         """,
     )
 
@@ -122,15 +108,16 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--github-sha",
+        "--total-memory-threshold",
         required=True,
+        type=int,
         help="""
-        The SHA of the commit for the current GitHub workflow run. Used to
-        create a folder for the snapshot PNG files.
+        The threshold the Total Memory (in bytes) must stay under to not trigger
+        the alarm.
 
         Examples:
 
-            --github-sha=${{ github.sha }}
+            --total-memory-threshold=$(echo 1.5 \* 2^30 | bc)
         """,
     )
 
@@ -148,15 +135,15 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--instrumentation-type",
+        "--github-sha",
         required=True,
         help="""
-        The framework platform for the Sample App which produced the performance
-        metrics. Used to create the name of the snapshot PNG file.
+        The SHA of the commit for the current GitHub workflow run. Used to
+        create a folder for the snapshot PNG files.
 
         Examples:
 
-            --instrumentation-type=auto
+            --github-sha=${{ github.sha }}
         """,
     )
 
@@ -173,15 +160,28 @@ def parse_args():
         """,
     )
 
+    parser.add_argument(
+        "--instrumentation-type",
+        required=True,
+        help="""
+        The framework platform for the Sample App which produced the performance
+        metrics. Used to create the name of the snapshot PNG file.
+
+        Examples:
+
+            --instrumentation-type=auto
+        """,
+    )
+
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     logger.debug("Starting script to get performance test results.")
 
-    start_time = (datetime.utcnow() - timedelta(hours=1)).strftime("%FT%TZ")
-
     args = parse_args()
+
+    start_time = (datetime.utcnow() - timedelta(minutes=args.test_duration_minutes)).strftime("%FT%TZ")
 
     metric_widget_images = [
         (
@@ -292,14 +292,14 @@ if __name__ == "__main__":
     aws_client = boto3.client("cloudwatch")
 
     for widget_type, metric_widget_params in metric_widget_images:
-        metric_widget_image_data_raw = aws_client.get_metric_widget_image(
-            MetricWidget=metric_widget_params,
+        metric_widget_image_bytes = aws_client.get_metric_widget_image(
+            MetricWidget=json.dumps(metric_widget_params),
         )["MetricWidgetImage"]
 
         with open(
             f"soak-tests/snapshots/{args.github_sha}/{args.app_platform}-{args.instrumentation_type}-{widget_type}-{args.github_run_id}.png",
-            "w",
+            "wb",
         ) as file_context:
-            file_context.write(base64.decode(metric_widget_image_data_raw))
+            file_context.write(metric_widget_image_bytes)
 
-    logger.info("Done polling Performance Test alarms.")
+    logger.info("Done creating metric widget images.")
