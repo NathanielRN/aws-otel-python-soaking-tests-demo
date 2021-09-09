@@ -134,11 +134,13 @@ jobs:
           --github-run-id $GITHUB_RUN_ID
           --instrumentation-type ${{ matrix.instrumentation-type }}
       - name: Commit snapshots to repository
+        # git remote set-url origin https://github-actions:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
         run: >-
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "GitHub Actions"
           git checkout main;
           git pull;
           git checkout gh-pages;
-          git pull;
           git add soak-tests/snapshots;
           git commit -m "Adding Soak Tests Snapshots from ${{ github.sha }}";
           git push;
