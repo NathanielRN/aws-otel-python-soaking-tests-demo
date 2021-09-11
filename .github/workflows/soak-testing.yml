@@ -12,7 +12,7 @@ on:
 env:
   AWS_DEFAULT_REGION: us-east-1
   TEST_DURATION_MINUTES: 300
-  HOSTMETRICS_INTERVAL_SECS: 30
+  HOSTMETRICS_INTERVAL_SECS: 600
   CPU_LOAD_THRESHOLD: 65 #75
   TOTAL_MEMORY_THRESHOLD: 1610612736
   # TODO: We might be able to adapt the "Soak Tests" to be "Overhead Tests". This means monitoring the Sample App's
@@ -32,7 +32,7 @@ jobs:
       fail-fast: false
       matrix:
         app-platform: [ flask ]
-        instrumentation-type: [ auto ]
+        instrumentation-type: [ auto, manual ]
     env:
       # NOTE: The configuration of `APP_PATH` is repo dependent
       APP_PATH: integration-test-apps/${{ matrix.instrumentation-type}}-instrumentation/${{ matrix.app-platform }}
@@ -56,7 +56,9 @@ jobs:
         if: ${{ matrix.instrumentation-type == 'manual' }}
         run: |-
           echo "APP_PROCESS_EXECUTABLE_NAME=python" >> $GITHUB_ENV;
-          echo "APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE='/usr/local/bin/python /app/application.py'" >> $GITHUB_ENV;
+          echo 'APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE<<EOF' >> $GITHUB_ENV
+          echo '/usr/local/bin/python /app/application.py' >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
       - name: Clone This Repo First
         uses: actions/checkout@v2
       - name: Clone OpenTelemetry Core Repo
