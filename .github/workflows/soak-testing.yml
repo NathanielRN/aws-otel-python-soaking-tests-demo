@@ -11,10 +11,10 @@ on:
     branches: [ main ]
 env:
   # NOTE: The configuration of `APP_PROCESS_EXECUTABLE_NAME` is repo dependent
-  APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE: python3
+  APP_PROCESS_EXECUTABLE_NAME: python3
   AWS_DEFAULT_REGION: us-east-1
   TEST_DURATION_MINUTES: 300
-  HOSTMETRICS_INTERVAL_SECS: 600
+  HOSTMETRICS_INTERVAL_SECS: 30
   CPU_LOAD_THRESHOLD: 65 #75
   TOTAL_MEMORY_THRESHOLD: 1610612736
   # TODO: We might be able to adapt the "Soak Tests" to be "Overhead Tests". This means monitoring the Sample App's
