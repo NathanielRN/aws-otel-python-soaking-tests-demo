@@ -5,10 +5,10 @@
 
 name: Soak Testing
 on:
-  # schedule:
-  #   - cron: '0 */24 * * *'
-  push:
-    branches: [ main ]
+  schedule:
+    - cron: '0 */6 * * *'
+  # push:
+  #   branches: [ main ]
 env:
   # NOTE: The configuration of `APP_PROCESS_EXECUTABLE_NAME` is repo dependent
   APP_PROCESS_EXECUTABLE_NAME: python3
