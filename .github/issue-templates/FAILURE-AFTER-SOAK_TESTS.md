@@ -56,6 +56,7 @@ Test: {{ repository.owner }}
 Test: {{ repository.repository }}
 
 Test: {{ repository_owner }}
+Test: {{ github.repository_owner }}
 
 # Useful Links
 
