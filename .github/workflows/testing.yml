@@ -55,3 +55,6 @@ jobs:
         run: |
           echo ${{ github.repository }}
           echo ${{ github.repository_owner }}
+          echo ${{ github.context.repo }}
+          echo ${{ github.context.repo.repo }}
+          echo ${{ github.context.repo.owner }}

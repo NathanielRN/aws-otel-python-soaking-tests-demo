@@ -5,10 +5,10 @@
 
 name: Soak Testing
 on:
-  # schedule:
-  #   - cron: '*/30 * * * *'
-  push:
-    branches: [ main ]
+  schedule:
+    - cron: '*/5 * * * *'
+  # push:
+  #   branches: [ main ]
 env:
   # NOTE: The configuration of `APP_PROCESS_EXECUTABLE_NAME` is repo dependent
   APP_PROCESS_EXECUTABLE_NAME: python3
@@ -183,7 +183,7 @@ jobs:
         id: check-performance-tests-already-reported
         run: |
           git checkout gh-pages;
-          HAS_RESULTS_ALREADY=$(grep ${{ github.sha }} soak-tests/per-commit-overall-results/data.js; echo $?);
+          HAS_RESULTS_ALREADY=$(grep --quiet ${{ github.sha }} soak-tests/per-commit-overall-results/data.js; echo $?);
           git checkout main;
           exit $HAS_RESULTS_ALREADY
       - name: Report on Performance Test Averages results
@@ -220,6 +220,8 @@ jobs:
           APP_PLATFORM: ${{ matrix.app-platform }}
           INSTRUMENTATION_TYPE: ${{ matrix.instrumentation-type }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY_NAME: aws-otel-python
         with:
           filename: .github/issue-templates/FAILURE-AFTER-SOAK_TESTS.md
       - name: Check for Performance Degradation either DURING or AFTER Performance Tests
