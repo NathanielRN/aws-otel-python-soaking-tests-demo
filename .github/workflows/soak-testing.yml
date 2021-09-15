@@ -5,15 +5,15 @@
 
 name: Soak Testing
 on:
-  schedule:
-    - cron: '*/30 * * * *'
-  # push:
-  #   branches: [ main ]
+  # schedule:
+  #   - cron: '*/30 * * * *'
+  push:
+    branches: [ main ]
 env:
   # NOTE: The configuration of `APP_PROCESS_EXECUTABLE_NAME` is repo dependent
   APP_PROCESS_EXECUTABLE_NAME: python3
   AWS_DEFAULT_REGION: us-east-1
-  TEST_DURATION_MINUTES: 300
+  TEST_DURATION_MINUTES: 600
   HOSTMETRICS_INTERVAL_SECS: 600
   CPU_LOAD_THRESHOLD: 71 #75
   TOTAL_MEMORY_THRESHOLD: 1610612736
@@ -43,6 +43,57 @@ jobs:
       # which we probably will not do?). If we do need it, move to steps below to access $GITHUB_RUN_ID.
       LOGS_NAMESPACE: ${{ github.repository }}/soak-tests-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}
     steps:
+      # - name: What values exist?
+      #   run: |
+      #     echo "More: ${{ repo }}"
+      #     echo "More: ${{ repo.repo }}"
+      #     echo "More: ${{ repo.owner }}"
+
+      #     echo "More: ${{ issue }}"
+
+      #     echo "Test GitHub context 1: ${{ github.context }}"
+      #     echo "Test GitHub context 1 repo owner: ${{ github.context.repo.owner }}"
+      #     echo "Test GitHub context 1 repo repo: ${{ github.context.repo.repo }}"
+      #     echo "Test GitHub context 1 ref: ${{ github.context.ref }}"
+      #     echo "Test GitHub context 1 ref issue owner: ${{ github.context.issue.owner }}"
+      #     echo "Test GitHub context 1 ref issue repo: ${{ github.context.issue.repo }}"
+      #     echo "Test GitHub context 1 ref issue issue_number: ${{ github.context.issue.issue_number }}"
+      #     echo "Test GitHub context 1 ref pullRequest owner: ${{ github.context.pullRequest.owner }}"
+      #     echo "Test GitHub context 1 ref pullRequest repo: ${{ github.context.pullRequest.repo }}"
+      #     echo "Test GitHub context 1 ref pullRequest pull_number: ${{ github.context.pullRequest.pull_number }}"
+
+      #     echo "Test GitHub context 2: ${{ context }}"
+      #     echo "Test GitHub context 2 repo owner: ${{ context.repo.owner }}"
+      #     echo "Test GitHub context 2 repo repo: ${{ context.repo.repo }}"
+      #     echo "Test GitHub context 2 ref: ${{ context.ref }}"
+      #     echo "Test GitHub context 2 ref issue owner: ${{ context.issue.owner }}"
+      #     echo "Test GitHub context 2 ref issue repo: ${{ context.issue.repo }}"
+      #     echo "Test GitHub context 2 ref issue issue_number: ${{ context.issue.issue_number }}"
+      #     echo "Test GitHub context 2 ref pullRequest owner: ${{ context.pullRequest.owner }}"
+      #     echo "Test GitHub context 2 ref pullRequest repo: ${{ context.pullRequest.repo }}"
+      #     echo "Test GitHub context 2 ref pullRequest pull_number: ${{ context.pullRequest.pull_number }}"
+
+      #     echo "Test: ${{ github.context.repository }}"
+      #     echo "Test: ${{ github.context.repository.repo }}"
+      #     echo "Test: ${{ github.context.repository.owner }}"
+      #     echo "Test: ${{ github.context.repository.repository }}"
+
+      #     echo "Test: ${{ github.repository }}"
+      #     echo "Test: ${{ github.repository.repo }}"
+      #     echo "Test: ${{ github.repository.owner }}"
+      #     echo "Test: ${{ github.repository.repository }}"
+
+      #     echo "Test: ${{ context.repository }}"
+      #     echo "Test: ${{ context.repository.repo }}"
+      #     echo "Test: ${{ context.repository.owner }}"
+      #     echo "Test: ${{ context.repository.repository }}"
+
+      #     echo "Test: ${{ repository }}"
+      #     echo "Test: ${{ repository.repo }}"
+      #     echo "Test: ${{ repository.owner }}"
+      #     echo "Test: ${{ repository.repository }}"
+
+      #     echo "Test: ${{ repository_owner }}"
       # NOTE: The configuration of `APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE` is repo dependent
       - name: Configure Auto Instrumentation-Type Specific Values
         if: ${{ matrix.instrumentation-type == 'auto' }}
@@ -179,8 +230,17 @@ jobs:
           --app-process-command-line-dimension-value "${{ env.APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE }}"
           --total-memory-threshold ${{ env.TOTAL_MEMORY_THRESHOLD }}
           --test-duration-minutes ${{ env.TEST_DURATION_MINUTES }}
+      - name: Check if we already have Performance Test data for this commit
+        continue-on-error: true
+        id: check-performance-tests-already-reported
+        run: |
+          git checkout main;
+          git pull;
+          git checkout gh-pages;
+          exit $(grep ${{ github.sha }} soak-tests/per-commit-overall-results/data.js);
       - name: Report on Performance Test Averages results
         uses: NathanielRN/github-action-benchmark@v1.8.3-alpha3
+        if: steps.check-performance-tests-already-reported.outcome == 'failure'
         continue-on-error: true
         id: check-failure-after-performance-tests
         with:
