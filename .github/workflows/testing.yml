@@ -7,54 +7,27 @@ jobs:
   example_test:
     name: Testing what values exist
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      issues: write
     steps:
       - name: What values exist?
-        # echo "Test GitHub context 1: ${{ github.context }}"
-        # echo "Test GitHub context 1 repo owner: ${{ github.context.repo.owner }}"
-        # echo "Test GitHub context 1 repo repo: ${{ github.context.repo.repo }}"
-        # echo "Test GitHub context 1 ref: ${{ github.context.ref }}"
-        # echo "Test GitHub context 1 ref issue owner: ${{ github.context.issue.owner }}"
-        # echo "Test GitHub context 1 ref issue repo: ${{ github.context.issue.repo }}"
-        # echo "Test GitHub context 1 ref issue issue_number: ${{ github.context.issue.issue_number }}"
-        # echo "Test GitHub context 1 ref pullRequest owner: ${{ github.context.pullRequest.owner }}"
-        # echo "Test GitHub context 1 ref pullRequest repo: ${{ github.context.pullRequest.repo }}"
-        # echo "Test GitHub context 1 ref pullRequest pull_number: ${{ github.context.pullRequest.pull_number }}"
-
-        # echo "Test GitHub context 2: ${{ context }}"
-        # echo "Test GitHub context 2 repo owner: ${{ context.repo.owner }}"
-        # echo "Test GitHub context 2 repo repo: ${{ context.repo.repo }}"
-        # echo "Test GitHub context 2 ref: ${{ context.ref }}"
-        # echo "Test GitHub context 2 ref issue owner: ${{ context.issue.owner }}"
-        # echo "Test GitHub context 2 ref issue repo: ${{ context.issue.repo }}"
-        # echo "Test GitHub context 2 ref issue issue_number: ${{ context.issue.issue_number }}"
-        # echo "Test GitHub context 2 ref pullRequest owner: ${{ context.pullRequest.owner }}"
-        # echo "Test GitHub context 2 ref pullRequest repo: ${{ context.pullRequest.repo }}"
-        # echo "Test GitHub context 2 ref pullRequest pull_number: ${{ context.pullRequest.pull_number }}"
-
-        # echo "Test: ${{ github.context.repository }}"
-        # echo "Test: ${{ github.context.repository.repo }}"
-        # echo "Test: ${{ github.context.repository.owner }}"
-        # echo "Test: ${{ github.context.repository.repository }}"
-
-        # echo "Test: ${{ github.repository }}"
-        # echo "Test: ${{ github.repository.repo }}"
-        # echo "Test: ${{ github.repository.owner }}"
-        # echo "Test: ${{ github.repository.repository }}"
-
-        # echo "Test: ${{ context.repository }}"
-        # echo "Test: ${{ context.repository.repo }}"
-        # echo "Test: ${{ context.repository.owner }}"
-        # echo "Test: ${{ context.repository.repository }}"
-
-        # echo "Test: ${{ repository }}"
-        # echo "Test: ${{ repository.repo }}"
-        # echo "Test: ${{ repository.owner }}"
-        # echo "Test: ${{ repository.repository }}"
-
-        # echo "Test: ${{ repository_owner }}"
         run: |
           echo ${{ github.repository }}
           echo ${{ github.repository_owner }}
           echo ${{ github.context.repo }}
           echo ${{ github.context.repo.repo }}
           echo ${{ github.context.repo.owner }}
+      - name: Clone This Repo First
+        uses: actions/checkout@v2
+      - name: Publish Issue if failed AFTER Performance Tests
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          APP_PLATFORM: TEST_APP_PLATFORM
+          INSTRUMENTATION_TYPE: TEST_INSTRUMENTATION_TYPE
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY_NAME: TEST_OKAY
+        with:
+          filename: .github/issue-templates/FAILURE-AFTER-SOAK_TESTS.md
