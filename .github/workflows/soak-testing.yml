@@ -6,7 +6,7 @@
 name: Soak Testing
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '* */24 * * *'
   # push:
   #   branches: [ main ]
 env:
@@ -214,14 +214,12 @@ jobs:
         with:
           filename: .github/issue-templates/FAILURE-DURING-SOAK_TESTS.md
       - name: Publish Issue if failed AFTER Performance Tests
-        uses: JasonEtco/create-an-issue@v2
+        uses: NathanielRN/create-an-issue@v2.5.1-alpha2
         if: steps.check-failure-after-performance-tests.outcome == 'failure'
         env:
           APP_PLATFORM: ${{ matrix.app-platform }}
           INSTRUMENTATION_TYPE: ${{ matrix.instrumentation-type }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
-          GITHUB_REPOSITORY_NAME: aws-otel-python
         with:
           filename: .github/issue-templates/FAILURE-AFTER-SOAK_TESTS.md
       - name: Check for Performance Degradation either DURING or AFTER Performance Tests
