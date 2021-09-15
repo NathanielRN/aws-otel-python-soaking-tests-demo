@@ -180,7 +180,7 @@ jobs:
           --total-memory-threshold ${{ env.TOTAL_MEMORY_THRESHOLD }}
           --test-duration-minutes ${{ env.TEST_DURATION_MINUTES }}
       - name: Report on Performance Test Averages results
-        uses: NathanielRN/github-action-benchmark@v1.8.3-alpha2
+        uses: NathanielRN/github-action-benchmark@v1.8.3-alpha3
         continue-on-error: true
         id: check-failure-after-performance-tests
         with:

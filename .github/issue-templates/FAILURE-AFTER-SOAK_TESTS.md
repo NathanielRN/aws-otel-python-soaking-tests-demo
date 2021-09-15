@@ -29,6 +29,28 @@ Test GitHub context 2 ref pullRequest owner: {{ context.pullRequest.owner }}
 Test GitHub context 2 ref pullRequest repo: {{ context.pullRequest.repo }}
 Test GitHub context 2 ref pullRequest pull_number: {{ context.pullRequest.pull_number }}
 
+Test: {{ github.context.repository }}
+Test: {{ github.context.repository.repo }}
+Test: {{ github.context.repository.owner }}
+Test: {{ github.context.repository.repository }}
+
+Test: {{ github.repository }}
+Test: {{ github.repository.repo }}
+Test: {{ github.repository.owner }}
+Test: {{ github.repository.repository }}
+
+Test: {{ context.repository }}
+Test: {{ context.repository.repo }}
+Test: {{ context.repository.owner }}
+Test: {{ context.repository.repository }}
+
+Test: {{ repository }}
+Test: {{ repository.repo }}
+Test: {{ repository.owner }}
+Test: {{ repository.repository }}
+
+Test: {{ repository_owner }}
+
 # Useful Links
 
 Snapshots of the Soak Test run are available [on the gh-pages branch](https://github.com/{{ env.GITHUB_REPOSITORY }}/tree/gh-pages/soak-tests/snapshots). These are the snapshots for the violating commit:
