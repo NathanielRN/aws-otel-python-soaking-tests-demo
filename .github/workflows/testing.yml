@@ -22,7 +22,7 @@ jobs:
       - name: Clone This Repo First
         uses: actions/checkout@v2
       - name: Publish Issue if failed AFTER Performance Tests
-        uses: JasonEtco/create-an-issue@v2
+        uses: NathanielRN/create-an-issue@v2.5.1-alpha2
         env:
           APP_PLATFORM: TEST_APP_PLATFORM
           INSTRUMENTATION_TYPE: TEST_INSTRUMENTATION_TYPE

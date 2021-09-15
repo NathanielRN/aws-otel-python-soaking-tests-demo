@@ -7,9 +7,9 @@ labels: bug, enhancement
 
 After the Soak Tests completed, a performance degradation was revealed for commit {{ sha }} of the `{{ ref }}` branch for the ({{ env.APP_PLATFORM }}, {{ env.INSTRUMENTATION_TYPE }}) Sample App. Check out the Action Logs from the `{{ workflow }}` [workflow run on GitHub]({{ env.GITHUB_SERVER_URL }}/{{ env.GITHUB_REPOSITORY }}/actions/runs/{{ env.GITHUB_RUN_ID }}) to view the threshold violation.
 
-More: {{ repo() }}
-More: {{ repo().repo }}
-More: {{ repo().owner }}
+More: {{ repo }}
+More: {{ repo.repo }}
+More: {{ repo.owner }}
 
 # Useful Links
 
