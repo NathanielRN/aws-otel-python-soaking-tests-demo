@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1631739098624,
+  "lastUpdate": 1631739583188,
   "repoUrl": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo",
   "entries": {
     "Soak Test Results - sample-app-flask-auto": [
@@ -621,6 +621,38 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/c10146dd69cfe8affecf00f197506a3f649a1eef"
         },
         "date": 1631739098012,
+        "tool": "custombenchmark",
+        "benches": [
+          {
+            "name": "Soak Test Average CPU Load",
+            "value": 70.55458333333333,
+            "unit": "Percent"
+          },
+          {
+            "name": "Soak Test Average Virtual Memory Used",
+            "value": 962.1082589285714,
+            "unit": "Megabytes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN",
+            "email": "nathanielruiz98@gmail.com"
+          },
+          "committer": {
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN",
+            "email": "nathanielruiz98@gmail.com"
+          },
+          "id": "504c669e3bc8fde60a9475ebd41cbfa70f35e9af",
+          "message": "Test running on a schedule and not dupping perf test results",
+          "timestamp": "2021-09-15T20:32:07Z",
+          "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/504c669e3bc8fde60a9475ebd41cbfa70f35e9af"
+        },
+        "date": 1631739582042,
         "tool": "custombenchmark",
         "benches": [
           {
