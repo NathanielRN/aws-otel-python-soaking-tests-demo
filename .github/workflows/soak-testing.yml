@@ -12,7 +12,7 @@ on:
         required: true
       test_duration_minutes:
         description: 'The duration of the Soak Tests in minutes.'
-        required: false
+        required: true
         default: 20 #300
   schedule:
     - cron: '*/30 * * * *'
@@ -78,8 +78,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ env.TARGET_SHA }}
-      # FIXME: How do we get the Commit SHA used by the Soak Tests perviously in the Auto Instrumentation app?
-      # FIXME: How do we get the Commit SHA used by the Soak Tests previously here?
+      # FIXME: This uses the latest Commit SHA of the upstream Core repo. We should provide it as an input
+      # to consider the edge case where we want to run against a specific Core repo change. For the manual
+      # instrumentation app.
+      # FIXME: This uses the latest Commit SHA of the upstream Contrib repo. We should provide it as an input
+      # to consider the edge case where we want to run against a specific Contrib repo change. For the manual
+      # instrumentation app.
       - name: Clone OpenTelemetry Core Repo
         uses: actions/checkout@v2
         if: ${{ matrix.instrumentation-type == 'manual' }}
@@ -191,8 +195,7 @@ jobs:
         run: |-
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com";
           git config user.name "GitHub Actions";
-          git checkout main;
-          git pull;
+          git fetch;
           git checkout gh-pages;
           git add soak-tests/snapshots;
           git commit -m "Adding Soak Tests Snapshots from ${{ env.TARGET_SHA }}";
