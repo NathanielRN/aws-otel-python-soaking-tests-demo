@@ -6,14 +6,14 @@
 name: Soak Testing
 on:
   schedule:
-    - cron: '* */24 * * *'
+    - cron: '0 */24 * * *'
   # push:
   #   branches: [ main ]
 env:
   # NOTE: The configuration of `APP_PROCESS_EXECUTABLE_NAME` is repo dependent
   APP_PROCESS_EXECUTABLE_NAME: python3
   AWS_DEFAULT_REGION: us-east-1
-  TEST_DURATION_MINUTES: 600
+  TEST_DURATION_MINUTES: 300
   HOSTMETRICS_INTERVAL_SECS: 600
   CPU_LOAD_THRESHOLD: 71 #75
   TOTAL_MEMORY_THRESHOLD: 1610612736
@@ -118,31 +118,31 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-duration-seconds: 21600 # 6 Hours
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
-      # - name: Run All Docker Containers - Sample App + OTel Collector + Load Generator + Alarm Poller
-      #   id: check-failure-during-performance-tests
-      #   continue-on-error: true
-      #   working-directory: .github/docker-performance-tests
-      #   env:
-      #     APP_IMAGE: ${{ fromJSON(steps.docker-image-metadata.outputs.json).tags[0] }}
-      #     INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
-      #     LISTEN_ADDRESS: 0.0.0.0:8080
-      #     LOG_GROUP_NAME: otel-sdk-performance-tests
-      #     APP_PLATFORM: ${{ matrix.app-platform }}
-      #     INSTRUMENTATION_TYPE: ${{ matrix.instrumentation-type }}
-      #     # Also uses:
-      #     # LOGS_NAMESPACE
-      #     # LOG_STREAM_NAME
-      #     # APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE
-      #     # APP_PROCESS_EXECUTABLE_NAME
-      #     # HOSTMETRICS_INTERVAL_SECS
-      #     # TEST_DURATION_MINUTES
-      #     # NUM_OF_CPUS
-      #     # CPU_LOAD_THRESHOLD
-      #     # TOTAL_MEMORY_THRESHOLD
-      #     # AWS_DEFAULT_REGION
-      #   run: >-
-      #     docker-compose up --build;
-      #     exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-performance-tests_alarms-poller") --format="{{.State.ExitCode}}");
+      - name: Run All Docker Containers - Sample App + OTel Collector + Load Generator + Alarm Poller
+        id: check-failure-during-performance-tests
+        continue-on-error: true
+        working-directory: .github/docker-performance-tests
+        env:
+          APP_IMAGE: ${{ fromJSON(steps.docker-image-metadata.outputs.json).tags[0] }}
+          INSTANCE_ID: ${{ github.run_id }}-${{ github.run_number }}
+          LISTEN_ADDRESS: 0.0.0.0:8080
+          LOG_GROUP_NAME: otel-sdk-performance-tests
+          APP_PLATFORM: ${{ matrix.app-platform }}
+          INSTRUMENTATION_TYPE: ${{ matrix.instrumentation-type }}
+          # Also uses:
+          # LOGS_NAMESPACE
+          # LOG_STREAM_NAME
+          # APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE
+          # APP_PROCESS_EXECUTABLE_NAME
+          # HOSTMETRICS_INTERVAL_SECS
+          # TEST_DURATION_MINUTES
+          # NUM_OF_CPUS
+          # CPU_LOAD_THRESHOLD
+          # TOTAL_MEMORY_THRESHOLD
+          # AWS_DEFAULT_REGION
+        run: >-
+          docker-compose up --build;
+          exit $(docker inspect $(docker ps --quiet --all --filter "name=docker-performance-tests_alarms-poller") --format="{{.State.ExitCode}}");
       - name: Install script dependencies
         run: pip install boto3
       - name: Get a snapshot of metrics
@@ -186,7 +186,7 @@ jobs:
           HAS_RESULTS_ALREADY=$(grep --quiet ${{ github.sha }} soak-tests/per-commit-overall-results/data.js; echo $?);
           git checkout main;
           exit $HAS_RESULTS_ALREADY
-      - name: Report on Performance Test Averages results
+      - name: Graph and Report Performance Test Averages result
         uses: NathanielRN/github-action-benchmark@v1.8.3-alpha3
         if: steps.check-performance-tests-already-reported.outcome == 'failure'
         continue-on-error: true
@@ -197,7 +197,7 @@ jobs:
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           max-items-in-chart: 100
-          alert-threshold: 1% #175%
+          alert-threshold: 175%
           # Does not work as expected, see: https://github.com/open-telemetry/opentelemetry-python/pull/1478
           # comment-always: true
           fail-on-alert: true
