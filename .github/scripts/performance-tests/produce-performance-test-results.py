@@ -16,6 +16,7 @@ logger = logging.getLogger(__file__)
 
 # AWS Client API Constants
 
+COMMIT_SHA_DIMENSION_NAME = "commit_sha"
 PROCESS_COMMAND_LINE_DIMENSION_NAME = "process.command_line"
 METRIC_DATA_STATISTIC = "Sum"
 
@@ -125,6 +126,20 @@ def parse_args():
         """,
     )
 
+    parser.add_argument(
+        "--target-sha",
+        required=True,
+        help="""
+        The SHA of the commit for the current GitHub workflow run. Used to
+        query Cloudwatch by metric dimension value so metrics returned
+        correspond to the app that was performance tested.
+
+        Examples:
+
+            --target-sha=${{ github.sha }}
+        """,
+    )
+
     return parser.parse_args()
 
 
@@ -148,6 +163,10 @@ if __name__ == "__main__":
                         {
                             "Name": PROCESS_COMMAND_LINE_DIMENSION_NAME,
                             "Value": args.app_process_command_line_dimension_value,
+                        },
+                        {
+                            "Name": COMMIT_SHA_DIMENSION_NAME,
+                            "Value": args.target_sha,
                         }
                     ],
                 },
@@ -177,6 +196,10 @@ if __name__ == "__main__":
                         {
                             "Name": PROCESS_COMMAND_LINE_DIMENSION_NAME,
                             "Value": args.app_process_command_line_dimension_value,
+                        },
+                        {
+                            "Name": COMMIT_SHA_DIMENSION_NAME,
+                            "Value": args.target_sha,
                         }
                     ],
                 },
@@ -194,8 +217,12 @@ if __name__ == "__main__":
                     "MetricName": "process.memory.physical_usage",
                     "Dimensions": [
                         {
-                            "Name": "process.command_line",
+                            "Name": PROCESS_COMMAND_LINE_DIMENSION_NAME,
                             "Value": args.app_process_command_line_dimension_value,
+                        },
+                        {
+                            "Name": COMMIT_SHA_DIMENSION_NAME,
+                            "Value": args.target_sha,
                         }
                     ],
                 },
