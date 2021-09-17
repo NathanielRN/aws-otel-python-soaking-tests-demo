@@ -22,7 +22,7 @@ env:
   AWS_DEFAULT_REGION: us-east-1
   DEFAULT_TEST_DURATION_MINUTES: 300
   HOSTMETRICS_INTERVAL_SECS: 600
-  CPU_LOAD_THRESHOLD: 71
+  CPU_LOAD_THRESHOLD: 7 #71
   TOTAL_MEMORY_THRESHOLD: 1610612736
   # TODO: We might be able to adapt the "Soak Tests" to be "Overhead Tests".
   # This means monitoring the Sample App's performance using high levels of TPS
@@ -248,7 +248,7 @@ jobs:
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           max-items-in-chart: 100
-          alert-threshold: 175%
+          alert-threshold: 1% #175%
           # Does not work as expected, see:
           # https://github.com/open-telemetry/opentelemetry-python/pull/1478
           # comment-always: true
