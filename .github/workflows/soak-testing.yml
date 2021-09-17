@@ -24,9 +24,10 @@ env:
   HOSTMETRICS_INTERVAL_SECS: 600
   CPU_LOAD_THRESHOLD: 71
   TOTAL_MEMORY_THRESHOLD: 1610612736
-  # TODO: We might be able to adapt the "Soak Tests" to be "Overhead Tests". This means monitoring the Sample App's
-  # performance using high levels of TPS for the Load Generator over a shorter period of testing time.
-  # For example: https://github.com/aws-observability/aws-otel-collector/blob/main/docs/performance_model.md
+  # TODO: We might be able to adapt the "Soak Tests" to be "Overhead Tests".
+  # This means monitoring the Sample App's performance using high levels of TPS
+  # for the Load Generator over a shorter period of testing time. For example:
+  # https://github.com/aws-observability/aws-otel-collector/blob/main/docs/performance_model.md
   # THROUGHPUT_PER_SECOND: TBD?
 
 jobs:
@@ -50,7 +51,8 @@ jobs:
       - name: Configure Performance Test Duration
         run: |
           echo "TEST_DURATION_MINUTES=${{ github.event.inputs.test_duration_minutes || env.DEFAULT_TEST_DURATION_MINUTES }}" >> $GITHUB_ENV
-      # NOTE: The configuration of `APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE` is repo dependent
+      # NOTE: The configuration of `APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE` is
+      # repo dependent
       - name: Use input as commit SHA
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
@@ -71,25 +73,30 @@ jobs:
           echo 'APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE<<EOF' >> $GITHUB_ENV
           echo '/usr/local/bin/python3 /app/application.py' >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
+      # WARNING: In an edge case, if two jobs use the same commit at the same
+      # time, they will race to push and pull Docker Images!
       - name: Create Image Suffix
         run: |
-          echo "IMAGE_SUFFIX=sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-${{ env.TARGET_SHA }}" >> $GITHUB_ENV
+          echo "IMAGE_SUFFIX=${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}-${{ env.TARGET_SHA }}" >> $GITHUB_ENV
       - name: Clone This Repo First
         uses: actions/checkout@v2
         with:
           ref: ${{ env.TARGET_SHA }}
-      # FIXME: This uses the latest Commit SHA of the upstream Core repo. We should provide it as an input
-      # to consider the edge case where we want to run against a specific Core repo change. For the manual
+      # FIXME: This uses the latest Commit SHA of the upstream Core repo. We
+      # should provide it as an input to consider the edge case where we want to
+      # run against a specific Core repo change. For the manual
       # instrumentation app.
-      # FIXME: We might also consider making this configurable for the Auto-Instrumentation app.
+      # FIXME: We might also consider making this configurable for the
+      # Auto-Instrumentation app.
       - name: Clone OpenTelemetry Core Repo
         uses: actions/checkout@v2
         if: ${{ matrix.instrumentation-type == 'manual' }}
         with:
           repository: open-telemetry/opentelemetry-python
           path: ${{ env.APP_PATH }}/opentelemetry-python-core
-      # FIXME: This uses the latest Commit SHA of the upstream Contrib repo. We should provide it as an input
-      # to consider the edge case where we want to run against a specific Contrib repo change. For the manual
+      # FIXME: This uses the latest Commit SHA of the upstream Contrib repo. We
+      # should provide it as an input to consider the edge case where we want to
+      # run against a specific Contrib repo change. For the manual
       # instrumentation app.
       - name: Clone OpenTelemetry Contrib Repo
         uses: actions/checkout@v2
@@ -119,15 +126,17 @@ jobs:
         id: docker-image-metadata
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ghcr.io/${{ github.repository }}-${{ env.IMAGE_SUFFIX }}
+          images: ghcr.io/${{ github.repository }}-sample-app-${{ env.IMAGE_SUFFIX }}
           tags: |
             type=schedule
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
-      # TODO: Instead of building, publishing, and pulling a Sample App Docker Image in `docker-compose`. Could we
-      # just build the image in `docker-compose` directly using `build/context`? We would lose the public Docker Image
-      # but we would avoid polluting the published packages and anyone could build from the commit if they wanted to.
+      # TODO: Instead of building, publishing, and pulling a Sample App Docker
+      # Image in `docker-compose`. Could we just build the image in
+      # `docker-compose` directly using `build/context`? We would lose the
+      # public Docker Image but we would avoid polluting the published packages
+      # and anyone could build from the commit if they wanted to.
       - name: Build and Push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -155,8 +164,6 @@ jobs:
           LISTEN_ADDRESS: 0.0.0.0:8080
           LOG_GROUP_NAME: otel-sdk-performance-tests
           TARGET_SHA: ${{ env.TARGET_SHA }}
-          APP_PLATFORM: ${{ matrix.app-platform }}
-          INSTRUMENTATION_TYPE: ${{ matrix.instrumentation-type }}
           # Also uses:
           # LOGS_NAMESPACE
           # LOG_STREAM_NAME
@@ -168,6 +175,8 @@ jobs:
           # CPU_LOAD_THRESHOLD
           # TOTAL_MEMORY_THRESHOLD
           # AWS_DEFAULT_REGION
+          # IMAGE_SUFFIX
+          # GITHUB_RUN_ID
         run: >-
           docker-compose up --build;
           RUN_EXIT_CODE=$(docker inspect $(docker ps --quiet --all --filter "name=docker-performance-tests_alarms-poller") --format="{{.State.ExitCode}}");
@@ -240,7 +249,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           max-items-in-chart: 100
           alert-threshold: 175%
-          # Does not work as expected, see: https://github.com/open-telemetry/opentelemetry-python/pull/1478
+          # Does not work as expected, see:
+          # https://github.com/open-telemetry/opentelemetry-python/pull/1478
           # comment-always: true
           fail-on-alert: true
           auto-push: ${{ github.ref == 'refs/heads/main' }}
