@@ -223,7 +223,7 @@ jobs:
               .entries |
               .\"Soak Test Results - sample-app-${{ matrix.app-platform }}-${{ matrix.instrumentation-type }}\" |
               any(.commit.id == \"${{ env.TARGET_SHA }}\")
-            "
+            " || echo false
           );
           git checkout main;
           [[ $HAS_RESULTS_ALREADY == false ]]
