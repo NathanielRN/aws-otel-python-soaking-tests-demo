@@ -3,6 +3,8 @@
 # - `gh-pages` branch
 # - AWS Account needs to add the LOG_GROUP_NAME defined below
 
+# DEBUG
+
 name: Soak Testing
 on:
   workflow_dispatch:
