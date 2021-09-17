@@ -224,9 +224,8 @@ jobs:
           --target-sha ${{ env.TARGET_SHA }}
           --github-run-id $GITHUB_RUN_ID
       - name: Is this the first time we run Performance Tests for this commit?
-        if: ${{ github.event_name == 'schedule' }}
         continue-on-error: true
-        id: check-performance-tests-already-reported
+        id: check-is-first-time-reporting-commit
         run: |
           git checkout gh-pages;
           HAS_RESULTS_ALREADY=$(
@@ -241,8 +240,6 @@ jobs:
           [[ $HAS_RESULTS_ALREADY == false ]]
       - name: Graph and Report Performance Test Averages result
         uses: NathanielRN/github-action-benchmark@v1.8.3-alpha3
-        if: ${{ github.event_name == 'schedule' &&
-          steps.check-performance-tests-already-reported.outcome == 'failure' }}
         continue-on-error: true
         id: check-failure-after-performance-tests
         with:
@@ -256,7 +253,9 @@ jobs:
           # https://github.com/open-telemetry/opentelemetry-python/pull/1478
           # comment-always: true
           fail-on-alert: true
-          auto-push: ${{ github.ref == 'refs/heads/main' }}
+          auto-push: ${{ github.event_name == 'schedule' &&
+            steps.check-is-first-time-reporting-commit.outcome == 'success' &&
+            github.ref == 'refs/heads/main' }}
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: soak-tests/per-commit-overall-results
       - name: Publish Issue if failed DURING Performance Tests
