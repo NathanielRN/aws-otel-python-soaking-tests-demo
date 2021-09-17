@@ -3,8 +3,6 @@
 # - `gh-pages` branch
 # - AWS Account needs to add the LOG_GROUP_NAME defined below
 
-# DEBUG
-
 name: Soak Testing
 on:
   workflow_dispatch:
@@ -15,14 +13,14 @@ on:
       test_duration_minutes:
         description: 'The duration of the Soak Tests in minutes.'
         required: true
-        default: 20 #300
+        default: 300
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '* */6 * * *'
 env:
   # NOTE: The configuration of `APP_PROCESS_EXECUTABLE_NAME` is repo dependent
   APP_PROCESS_EXECUTABLE_NAME: python3
   AWS_DEFAULT_REGION: us-east-1
-  DEFAULT_TEST_DURATION_MINUTES: 20 #300
+  DEFAULT_TEST_DURATION_MINUTES: 300
   HOSTMETRICS_INTERVAL_SECS: 600
   CPU_LOAD_THRESHOLD: 71
   TOTAL_MEMORY_THRESHOLD: 1610612736
@@ -83,16 +81,16 @@ jobs:
       # FIXME: This uses the latest Commit SHA of the upstream Core repo. We should provide it as an input
       # to consider the edge case where we want to run against a specific Core repo change. For the manual
       # instrumentation app.
-      # FIXME: This uses the latest Commit SHA of the upstream Contrib repo. We should provide it as an input
-      # to consider the edge case where we want to run against a specific Contrib repo change. For the manual
-      # instrumentation app.
+      # FIXME: We might also consider making this configurable for the Auto-Instrumentation app.
       - name: Clone OpenTelemetry Core Repo
         uses: actions/checkout@v2
         if: ${{ matrix.instrumentation-type == 'manual' }}
         with:
           repository: open-telemetry/opentelemetry-python
           path: ${{ env.APP_PATH }}/opentelemetry-python-core
-      # FIXME: How do we get the Commit SHA used by the Soak Tests previously here?
+      # FIXME: This uses the latest Commit SHA of the upstream Contrib repo. We should provide it as an input
+      # to consider the edge case where we want to run against a specific Contrib repo change. For the manual
+      # instrumentation app.
       - name: Clone OpenTelemetry Contrib Repo
         uses: actions/checkout@v2
         if: ${{ matrix.instrumentation-type == 'manual' }}
