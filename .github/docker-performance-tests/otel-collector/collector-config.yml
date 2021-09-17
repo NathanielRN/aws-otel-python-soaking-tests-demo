@@ -35,6 +35,9 @@ processors:
           - action: add_label
             new_label: commit_sha
             new_value: ${TARGET_SHA}
+          - action: add_label
+            new_label: github_run_id
+            new_value: ${GITHUB_RUN_ID}
 
 exporters:
   logging:
@@ -51,7 +54,8 @@ exporters:
       - dimensions: [
           [
             process.command_line,
-            commit_sha
+            commit_sha,
+            github_run_id
           ]
         ]
         metric_name_selectors:

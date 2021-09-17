@@ -9,6 +9,7 @@ services:
       - AWS_SESSION_TOKEN
       - AWS_DEFAULT_REGION
       - TARGET_SHA
+      - GITHUB_RUN_ID
       - HOSTMETRICS_INTERVAL_SECS
       - LOG_GROUP_NAME
       - LOGS_NAMESPACE

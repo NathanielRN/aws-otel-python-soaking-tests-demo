@@ -1,6 +1,9 @@
 import argparse
 import json
 import logging
+import os
+import shutil
+from heapq import nsmallest
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -9,14 +12,17 @@ import boto3
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s",
     level=logging.INFO,
-    datefmt="%Y-%m-%d %H:%M:%S",
+    datefmt="%FT%TZ",
 )
 
 logger = logging.getLogger(__file__)
 
+SOAK_TESTS_SNAPSHOTS_DIR = "soak-tests/snapshots"
+
 # AWS Client API Constants
 
 COMMIT_SHA_DIMENSION_NAME = "commit_sha"
+GITHUB_RUN_ID_DIMENSION_NAME = "github_run_id"
 PROCESS_COMMAND_LINE_DIMENSION_NAME = "process.command_line"
 METRIC_DATA_STATISTIC = "Sum"
 
@@ -127,6 +133,34 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--target-sha",
+        required=True,
+        help="""
+        The SHA of the commit for the current GitHub workflow run. Used to
+        query Cloudwatch by metric dimension value so metrics returned
+        correspond to the app that was performance tested. Also used to create a
+        folder for the snapshot PNG files.
+
+        Examples:
+
+            --target-sha=${{ github.sha }}
+        """,
+    )
+
+    parser.add_argument(
+        "--github-run-id",
+        required=True,
+        help="""
+        The Id for the current GitHub workflow run. Used to create the name of
+        the snapshot PNG file.
+
+        Examples:
+
+            --github-run-id=$GITHUB_RUN_ID
+        """,
+    )
+
+    parser.add_argument(
         "--app-platform",
         required=True,
         help="""
@@ -153,30 +187,16 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--target-sha",
+        "--max-benchmarks-to-keep",
         required=True,
+        type=int,
         help="""
-        The SHA of the commit for the current GitHub workflow run. Used to
-        query Cloudwatch by metric dimension value so metrics returned
-        correspond to the app that was performance tested. Also used to create a
-        folder for the snapshot PNG files.
+        The max number of benchmarks to keep. Used to limit the size of the
+        snapshots folder by deleting older results.
 
         Examples:
 
-            --target-sha=${{ github.sha }}
-        """,
-    )
-
-    parser.add_argument(
-        "--github-run-id",
-        required=True,
-        help="""
-        The Id for the current GitHub workflow run. Used to create the
-        name of the snapshot PNG file.
-
-        Examples:
-
-            --github-run-id=$GITHUB_RUN_ID
+            --max-benchmarks-to-keep=100
         """,
     )
 
@@ -204,6 +224,8 @@ if __name__ == "__main__":
                         args.app_process_command_line_dimension_value,
                         COMMIT_SHA_DIMENSION_NAME,
                         args.target_sha,
+                        GITHUB_RUN_ID_DIMENSION_NAME,
+                        args.github_run_id,
                         {
                             "id": "cpu_time_raw",
                             "label": "CPU Time Raw",
@@ -251,6 +273,8 @@ if __name__ == "__main__":
                         args.app_process_command_line_dimension_value,
                         COMMIT_SHA_DIMENSION_NAME,
                         args.target_sha,
+                        GITHUB_RUN_ID_DIMENSION_NAME,
+                        args.github_run_id,
                         {
                             "id": "virtual_memory_raw",
                             "label": "Virtual Memory",
@@ -260,6 +284,8 @@ if __name__ == "__main__":
                     [
                         ".",
                         "process.memory.physical_usage",
+                        ".",
+                        ".",
                         ".",
                         ".",
                         ".",
@@ -302,7 +328,7 @@ if __name__ == "__main__":
         ),
     ]
 
-    Path(f"soak-tests/snapshots/{ args.target_sha }").mkdir(
+    Path(f"{SOAK_TESTS_SNAPSHOTS_DIR}/{ args.target_sha }").mkdir(
         parents=True, exist_ok=True
     )
 
@@ -314,9 +340,22 @@ if __name__ == "__main__":
         )["MetricWidgetImage"]
 
         with open(
-            f"soak-tests/snapshots/{args.target_sha}/{args.app_platform}-{args.instrumentation_type}-{snapshot_type}-soak-{args.github_run_id}.png",
+            f"{SOAK_TESTS_SNAPSHOTS_DIR}/{args.target_sha}/{args.app_platform}-{args.instrumentation_type}-{snapshot_type}-soak-{args.github_run_id}.png",
             "wb",
         ) as file_context:
             file_context.write(metric_widget_image_bytes)
+
+    # Delete oldest snapshots
+
+    snapshot_dirs_length = len(os.listdir(SOAK_TESTS_SNAPSHOTS_DIR))
+
+    if snapshot_dirs_length > args.max_benchmarks_to_keep:
+        oldest_snapshot_dirs = nsmallest(
+            snapshot_dirs_length - args.max_benchmarks_to_keep,
+            Path(SOAK_TESTS_SNAPSHOTS_DIR).iterdir(),
+            key=os.path.getmtime,
+        )
+        for snapshot_dir in oldest_snapshot_dirs:
+            shutil.rmtree(snapshot_dir, ignore_errors=True)
 
     logger.info("Done creating metric widget images.")

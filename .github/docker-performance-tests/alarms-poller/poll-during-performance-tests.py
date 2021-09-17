@@ -9,7 +9,7 @@ import docker
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s",
     level=logging.INFO,
-    datefmt="%Y-%m-%d %H:%M:%S",
+    datefmt="%FT%TZ",
 )
 
 logger = logging.getLogger(__file__)
@@ -17,6 +17,7 @@ logger = logging.getLogger(__file__)
 # AWS Client API Constants
 
 COMMIT_SHA_DIMENSION_NAME = "commit_sha"
+GITHUB_RUN_ID_DIMENSION_NAME = "github_run_id"
 PROCESS_COMMAND_LINE_DIMENSION_NAME = "process.command_line"
 METRIC_DATA_STATISTIC = "Sum"
 
@@ -207,6 +208,10 @@ if __name__ == "__main__":
                         {
                             "Name": COMMIT_SHA_DIMENSION_NAME,
                             "Value": args.target_sha,
+                        },
+                        {
+                            "Name": GITHUB_RUN_ID_DIMENSION_NAME,
+                            "Value": args.github_run_id,
                         }
                     ],
                 },
@@ -240,6 +245,10 @@ if __name__ == "__main__":
                         {
                             "Name": COMMIT_SHA_DIMENSION_NAME,
                             "Value": args.target_sha,
+                        },
+                        {
+                            "Name": GITHUB_RUN_ID_DIMENSION_NAME,
+                            "Value": args.github_run_id,
                         }
                     ],
                 },
@@ -263,6 +272,10 @@ if __name__ == "__main__":
                         {
                             "Name": COMMIT_SHA_DIMENSION_NAME,
                             "Value": args.target_sha,
+                        },
+                        {
+                            "Name": GITHUB_RUN_ID_DIMENSION_NAME,
+                            "Value": args.github_run_id,
                         }
                     ],
                 },
@@ -324,6 +337,7 @@ if __name__ == "__main__":
     logger.info(
         "Begin polling alarms. Continue until Load Generator completes."
     )
+
     while (
         docker_client.containers.get(LOAD_GENERATOR_CONTAINER_NAME).attrs[
             "State"
