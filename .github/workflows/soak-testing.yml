@@ -14,8 +14,8 @@ on:
         description: 'The duration of the Soak Tests in minutes.'
         required: true
         default: 300
-  schedule:
-    - cron: '0 */1 * * *'
+  # schedule:
+  #   - cron: '0 */24 * * *'
 env:
   # NOTE: The configuration of `APP_PROCESS_EXECUTABLE_NAME` is repo dependent
   APP_PROCESS_EXECUTABLE_NAME: python3
