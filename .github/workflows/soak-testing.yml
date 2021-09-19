@@ -65,7 +65,8 @@ jobs:
           echo '/usr/local/bin/python3 application.py' | tee --append $GITHUB_ENV;
           echo 'EOF' >> $GITHUB_ENV
       - name: Configure Manual Instrumentation-Type Specific Values
-        if: ${{ matrix.instrumentation-type == 'manual' }}
+        if: ${{ matrix.instrumentation-type == 'manual' ||
+          matrix.instrumentation-type == 'none' }}
         run: |
           echo 'APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE<<EOF' >> $GITHUB_ENV
           echo '/usr/local/bin/python3 /app/application.py' | tee --append $GITHUB_ENV;

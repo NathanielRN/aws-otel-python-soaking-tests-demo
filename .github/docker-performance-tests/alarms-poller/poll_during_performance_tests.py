@@ -6,7 +6,7 @@ import time
 import boto3
 import docker
 
-from metric_data_params import add_arguments, get_metric_data_params
+import metric_data_params
 
 logging.basicConfig(
     format="%(asctime)-8s %(levelname)-8s %(message)s",
@@ -45,7 +45,7 @@ def parse_args():
         """
     )
 
-    parser = add_arguments(parser)
+    metric_data_params.add_arguments(parser)
 
     parser.add_argument(
         "--cpu-load-threshold",
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         (
             cpu_load_metric_data_queries,
             total_memory_metric_data_queries,
-        ) = get_metric_data_params(args)
+        ) = metric_data_params.get_metric_data_params(args)
 
         aws_client = boto3.client("cloudwatch")
 
