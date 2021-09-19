@@ -6,8 +6,6 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
-RUN opentelemetry-bootstrap --action=install
-
 ENV HOME=/
 
 ENV OTEL_RESOURCE_ATTRIBUTES='service.name=aws-sample-none-app'
