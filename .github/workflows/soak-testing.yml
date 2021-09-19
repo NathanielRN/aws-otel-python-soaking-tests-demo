@@ -194,7 +194,7 @@ jobs:
         run: |-
           docker-compose up --build;
           RUN_EXIT_CODE=$(docker inspect $(docker ps --quiet --all --filter "name=docker-performance-tests_alarms-poller") --format="{{.State.ExitCode}}");
-          echo "::set-output name=run_exit_code::${RUN_EXIT_CODE}";
+          echo "::set-output name=run_exit_code::1";
           exit $RUN_EXIT_CODE;
       - name: What is the value here?
         run: |-
