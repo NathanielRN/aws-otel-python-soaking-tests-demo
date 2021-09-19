@@ -6,7 +6,7 @@ import time
 import boto3
 import docker
 
-from .metric_data_params import add_arguments, get_metric_data_params
+from metric_data_params import add_arguments, get_metric_data_params
 
 logging.basicConfig(
     format="%(asctime)-8s %(levelname)-8s %(message)s",

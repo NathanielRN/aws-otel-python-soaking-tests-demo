@@ -14,7 +14,7 @@ The application uses [Flask](https://flask.palletsprojects.com/en/1.1.x/) to exp
 
 ## Running the integration testing application:
 
-For more information on running a python application using automatic instrumentation, please refer to the [ADOT Python Manual Instrumentation Documentation](https://aws-otel.github.io/docs/getting-started/python-sdk/trace-auto-instr). In this context, the ADOT Collector is being run locally as a sidecar.
+For more information on running a python application using automatic instrumentation, please refer to the [ADOT Python Auto Instrumentation Documentation](https://aws-otel.github.io/docs/getting-started/python-sdk/trace-auto-instr). In this context, the ADOT Collector is being run locally as a sidecar.
 
 Use python CLI to run the application directly in your terminal configured with OpenTelemetry parameters `LISTEN_ADDRESS=127.0.0.1:8080 OTEL_EXPORTER_OTLP_ENDPOINT=127.0.0.1:4317 OTEL_PROPAGATORS=xray OTEL_PYTHON_ID_GENERATOR=xray opentelemetry-instrument python integration-test-apps/auto-instrumentation/flask/application.py`
 
