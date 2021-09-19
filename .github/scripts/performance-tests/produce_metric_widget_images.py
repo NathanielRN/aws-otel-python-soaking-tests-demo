@@ -10,7 +10,7 @@ from pathlib import Path
 import boto3
 
 logging.basicConfig(
-    format="%(asctime)s %(levelname)-8s %(message)s",
+    format="%(asctime)-8s %(levelname)-8s %(message)s",
     level=logging.INFO,
     datefmt="%FT%TZ",
 )
@@ -30,8 +30,8 @@ METRIC_DATA_STATISTIC = "Sum"
 def parse_args():
     parser = argparse.ArgumentParser(
         description="""
-        produce-performance-test-results.py produces overall results for the
-        performance tests that were just run as JSON output.
+        produce_metric_widget_images.py produces snapshot graphs of the
+        metrics used in the performance tests that were just run.
         """
     )
 
@@ -46,6 +46,20 @@ def parse_args():
         Examples:
 
             --cpu-load-threshold=75
+        """,
+    )
+
+    parser.add_argument(
+        "--total-memory-threshold",
+        required=True,
+        type=int,
+        help="""
+        The threshold the Total Memory (in bytes) must stay under to not trigger
+        the alarm.
+
+        Examples:
+
+            --total-memory-threshold=$(echo 1.5 \* 2^30 | bc)
         """,
     )
 
@@ -67,7 +81,7 @@ def parse_args():
         type=int,
         help="""
         The interval at which performance metrics are collected. This is the
-        period used for the metrics monitored by the alarms and is the interval
+        period used by the metrics that the alarms monitor and is the interval
         with which the script polls the Performance Test alarms (in seconds).
 
         Examples:
@@ -101,20 +115,6 @@ def parse_args():
         Examples:
 
             --app-process-command-line-dimension-value='/usr/local/bin/python3 application.py'
-        """,
-    )
-
-    parser.add_argument(
-        "--total-memory-threshold",
-        required=True,
-        type=int,
-        help="""
-        The threshold the Total Memory (in bytes) must stay under to not trigger
-        the alarm.
-
-        Examples:
-
-            --total-memory-threshold=$(echo 1.5 \* 2^30 | bc)
         """,
     )
 

@@ -14,8 +14,8 @@ on:
         description: 'The duration of the Soak Tests in minutes.'
         required: true
         default: 300
-  # schedule:
-  #   - cron: '0 */24 * * *'
+  schedule:
+    - cron: '0 */24 * * *'
 env:
   # NOTE: The configuration of `APP_PROCESS_EXECUTABLE_NAME` is repo dependent
   APP_PROCESS_EXECUTABLE_NAME: python3
@@ -206,13 +206,13 @@ jobs:
         run: pip install boto3
       - name: Get a snapshot of metrics and commit them to the repository
         run: |
-          python3 .github/scripts/performance-tests/produce-metric-widget-images.py \
+          python3 .github/scripts/performance-tests/produce_metric_widget_images.py \
             --cpu-load-threshold ${{ env.CPU_LOAD_THRESHOLD }} \
+            --total-memory-threshold ${{ env.TOTAL_MEMORY_THRESHOLD }} \
             --logs-namespace ${{ env.LOGS_NAMESPACE }} \
             --metrics-period ${{ env.HOSTMETRICS_INTERVAL_SECS }} \
             --num-of-cpus ${{ env.NUM_OF_CPUS }} \
             --app-process-command-line-dimension-value "${{ env.APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE }}" \
-            --total-memory-threshold ${{ env.TOTAL_MEMORY_THRESHOLD }} \
             --target-sha ${{ env.TARGET_SHA }} \
             --github-run-id ${GITHUB_RUN_ID} \
             --test-duration-minutes ${{ env.TEST_DURATION_MINUTES }} \
@@ -229,13 +229,13 @@ jobs:
           git push;
           git checkout main;
       - name: Prepare Performance Test results as JSON output
-        run: python3 .github/scripts/performance-tests/produce-performance-test-results.py
+        run: python3 .github/scripts/performance-tests/get-metric-data/produce_performance_test_results.py
           --cpu-load-threshold ${{ env.CPU_LOAD_THRESHOLD }}
+          --total-memory-threshold ${{ env.TOTAL_MEMORY_THRESHOLD }}
           --logs-namespace ${{ env.LOGS_NAMESPACE }}
           --metrics-period ${{ env.HOSTMETRICS_INTERVAL_SECS }}
           --num-of-cpus ${{ env.NUM_OF_CPUS }}
           --app-process-command-line-dimension-value "${{ env.APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE }}"
-          --total-memory-threshold ${{ env.TOTAL_MEMORY_THRESHOLD }}
           --test-duration-minutes ${{ env.TEST_DURATION_MINUTES }}
           --target-sha ${{ env.TARGET_SHA }}
           --github-run-id ${GITHUB_RUN_ID}
@@ -264,7 +264,7 @@ jobs:
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           max-items-in-chart: ${{ env.MAX_BENCHMARKS_TO_KEEP }}
-          alert-threshold: 1% #175%
+          alert-threshold: 175%
           # Does not work as expected, see:
           # https://github.com/open-telemetry/opentelemetry-python/pull/1478
           # comment-always: true
