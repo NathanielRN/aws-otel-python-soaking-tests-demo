@@ -197,7 +197,7 @@ jobs:
           echo "::set-output name=run_exit_code::$RUN_EXIT_CODE";
           exit $RUN_EXIT_CODE;
       - name: Fail early if Soak Tests failed to start
-        if: ${{ steps.check-failure-during-performance-tests.outputs.run_exit_code == '1' }}
+        if: ${{ steps.check-failure-during-performance-tests.outputs.run_exit_code == 1 }}
         run: exit 1;
 
       # MARK: - Report on Performance Test Results
