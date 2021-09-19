@@ -93,6 +93,8 @@ def add_arguments(parser: argparse.ArgumentParser):
         """,
     )
 
+    return parser
+
 
 def get_metric_data_params(args):
     cpu_load_metric_data_queries = [

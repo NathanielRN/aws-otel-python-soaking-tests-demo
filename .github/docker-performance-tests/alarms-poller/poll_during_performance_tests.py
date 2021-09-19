@@ -45,7 +45,7 @@ def parse_args():
         """
     )
 
-    add_arguments(parser)
+    parser = add_arguments(parser)
 
     parser.add_argument(
         "--cpu-load-threshold",
