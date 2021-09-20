@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1632179196178,
+  "lastUpdate": 1632179226610,
   "repoUrl": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo",
   "entries": {
     "Soak Test Results - sample-app-flask-auto": [
@@ -855,6 +855,38 @@ window.BENCHMARK_DATA = {
           {
             "name": "Soak Test Average Virtual Memory Used",
             "value": 1696.10546875,
+            "unit": "Megabytes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN",
+            "email": "nathanielruiz98@gmail.com"
+          },
+          "committer": {
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN",
+            "email": "nathanielruiz98@gmail.com"
+          },
+          "id": "b165e4a9b43ca94295da16f82b6788e7e2fcc1b2",
+          "message": "Fix failing during soak test run",
+          "timestamp": "2021-09-20T17:50:03Z",
+          "url": "https://github.com/NathanielRN/aws-otel-python-soaking-tests-demo/commit/b165e4a9b43ca94295da16f82b6788e7e2fcc1b2"
+        },
+        "date": 1632179226218,
+        "tool": "custombenchmark",
+        "benches": [
+          {
+            "name": "Soak Test Average CPU Load",
+            "value": 68.71594827586208,
+            "unit": "Percent"
+          },
+          {
+            "name": "Soak Test Average Virtual Memory Used",
+            "value": 1905.5825520833334,
             "unit": "Megabytes"
           }
         ]
