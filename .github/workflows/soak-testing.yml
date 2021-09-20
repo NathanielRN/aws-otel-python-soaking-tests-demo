@@ -54,7 +54,7 @@ jobs:
         with:
           ref: ${{ env.TARGET_SHA }}
 
-      # MARK: - Instrumentation-Type Specific Values
+    # MARK: - Instrumentation-Type Specific Values
 
       # NOTE: The configuration of `APP_PROCESS_COMMAND_LINE_DIMENSION_VALUE` is
       # repo dependent
@@ -94,7 +94,7 @@ jobs:
           repository: open-telemetry/opentelemetry-python-contrib
           path: ${{ env.APP_PATH }}/opentelemetry-python-contrib
 
-      # MARK: - GitHub Workflow Event Type Specific Values
+    # MARK: - GitHub Workflow Event Type Specific Values
 
       - name: Use INPUT as commit SHA
         if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -108,7 +108,7 @@ jobs:
         run: |
           echo "TEST_DURATION_MINUTES=${{ github.event.inputs.test_duration_minutes || env.DEFAULT_TEST_DURATION_MINUTES }}" | tee --append $GITHUB_ENV;
 
-      # MARK: - Build and Push Sample App
+    # MARK: - Build and Push Sample App
 
       # WARNING: In an edge case, if two jobs use the same commit at the same
       # time, they will share an `IMAGE_SUFFIX` and race to push and pull Docker
@@ -156,7 +156,7 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
-      # MARK: - Run Performance Tests
+    # MARK: - Run Performance Tests
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -204,7 +204,7 @@ jobs:
         if: ${{ env.RUN_TESTS_EXIT_CODE == 1 }}
         run: exit 1;
 
-      # MARK: - Report on Performance Test Results
+    # MARK: - Report on Performance Test Results
 
       - name: Install script dependencies
         run: pip install boto3
